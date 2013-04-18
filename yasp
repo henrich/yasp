@@ -1,0 +1,114 @@
+#!/bin/bash
+#
+# yasp - Yet Another Simple/Speedy Piuparts
+#
+# 2013 Hideki Yamane <henrich@debian.or.jp>
+# 
+#-------------------------------------------------------------------------------
+
+set -e
+
+#-------------------------------------------------------------------------------
+# read configuration
+#-------------------------------------------------------------------------------
+
+for conf in /etc/yasp.conf ${HOME}/.yasp.conf
+do
+    if [ -f $conf ]; then
+        . $conf
+    fi
+done
+
+export LANG=C
+export LC_ALL=C
+
+if [ -z "$yasp_dir" -o -z "$distro" -o -z "$mirror" ]; then
+   echo "Something wrong with configuration... check your yasp.conf"
+   exit 1
+fi
+
+
+
+case in "$1"
+    create)
+
+#-------------------------------------------------------------------------------
+# prepare directories
+#-------------------------------------------------------------------------------
+
+for i in $distro
+do
+  if [ ! -d "$yasp_dir"/base/"$distro" ]; then
+      mkdir -p "$yasp_dir"/base/"$distro"
+  fi
+  if [ ! -d "$yasp_dir"/aptcache/"$distro"/var/cache/apt/archives ]; then
+      mkdir "$yasp_dir"/aptcache/"$distro"/var/cache/apt/archives
+  fi
+done
+
+if [ ! -d "$yasp_dir"aptcache/host/var/cache/apt ]; then
+   mkdir -p "$yasp_dir"aptcache/host/var/cache/apt
+   (cd "$yasp_dir"aptcache/host/var/cache/apt; ln -s /var/cache/apt/arhicves archives)
+fi
+
+for dir in working mountdir failed
+do
+  if [ ! -d "$yasp_dir"/"$dir" ]; then
+      mkdir "$yasp_dir"/"$dir"
+  fi
+done
+
+#-------------------------------------------------------------------------------
+# create base cow
+#-------------------------------------------------------------------------------
+
+if [ -d /var/cache/pbuilder/base.cow -o "$2" = -c ]; then
+  basedistro=`cat /var/cache/pbuilder/base.cow/etc/apt/sources.list | head -n1 |cut -d' ' -f3`
+  if [ ! -d "$yasp_dir"/base/"$basedistro" ]; then
+      cp -arp /var/cache/pbuilder/base.cow/* "$yasp_dir"/base/"$basedistro"
+  fi
+elif [ -f /var/cache/pbuilder/base.tgz -o "$2" = -p ]; then
+  basedistro=`cat `tar xvf /var/cache/pbuilder/base.tgz etc/apt/sources.list` |head -n1 |cut -d' ' -f3`
+  if [ ! -d "$yasp_dir"/base/"$basedistro" ]; then
+      tar -C "$yasp_dir"/base/"$basedistro" -xf /var/cache/pbuilder/base.tgz
+  fi
+fi
+
+
+for i in $distro
+do
+  if [ -d "$yasp_dir"/base/"$distro"/etc ]; then
+      tmpdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$package"_"`date +%Y%m%d%H%M%S`"`
+      mount -t aufs br="$yasp_dir"/base/"$distro":"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/working/"$tmpdir"
+      chroot "$yasp_dir"/base/"$distro" apt-get -qq update
+      chroot "$yasp_dir"/base/"$distro" apt-get -dyqq upgrade
+      umount "$yasp_dir"/working/"$tmpdir" && rmdir "$yasp_dir"/working/"$tmpdir"
+  else
+      debootstrap "$distro" "$yasp_dir"/base/"$distro" "$mirror"
+  fi
+done
+
+    ;;
+#-------------------------------------------------------------------------------
+
+    base-update)
+
+for i in $distro
+do
+  if [ -d "$yasp_dir"/base/"$distro"/etc ]; then
+      chroot "$yasp_dir"/base/"$distro" apt-get -qq update
+      chroot "$yasp_dir"/base/"$distro" apt-get -dyqq upgrade
+  else
+      debootstrap "$distro" "$yasp_dir"/base/"$distro" "$mirror"
+      cp "$yasp_dir"/base/"$distro"/var/cache/apt/archives/*.deb \
+         "$yasp_dir"aptcache/"$distro"/var/cache/apt/archives/
+  fi
+done
+
+    ;;
+#-------------------------------------------------------------------------------
+
+    help | *)
+    ;;
+esac
+
