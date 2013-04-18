@@ -8,6 +8,11 @@
 
 set -e
 
+if [ -z grep CONFIG_AUFS_FS "/boot/config-`uname -a| cut -d' ' -f3`" ]; then
+     echo "Your kernel seems to not support aufs, aborting..."
+     exit 1
+fi
+
 #-------------------------------------------------------------------------------
 # read configuration
 #-------------------------------------------------------------------------------
@@ -103,6 +108,42 @@ do
       cp "$yasp_dir"/base/"$distro"/var/cache/apt/archives/*.deb \
          "$yasp_dir"aptcache/"$distro"/var/cache/apt/archives/
   fi
+done
+
+    ;;
+#-------------------------------------------------------------------------------
+
+    test)
+
+# get package name from changes file, e.g. hail_0.8+0.11.37389dbf9b-1_amd64.changes
+
+packagefile=`echo $2|grep .changes$`
+
+if [ -z "$packagefile" ]; then
+    echo "Please specify .changes file"
+    exit 1
+else
+    package=`cat $packagefile | cut -d' ' -f4|grep .deb$|sort|uniq|cut -d'_' -f1`
+fi
+
+# cache *.deb to aptcache
+
+for i in $distro
+    chroot "$yasp_dir"/base/"$distro" apt-get -qq update
+    if [ ! -z "$package" ]; then
+      tmpdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$package"_"`date +%Y%m%d%H%M%S`"`
+      mount -t aufs br="$yasp_dir"/aptcache/"$distro":"$yasp_dir"/base/"$distro":"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/working/"$tmpdir"
+      for i in $package
+      do
+          pkgcheck=`chroot "$yasp_dir"/base/"$distro" apt-cache show -q "$i"`
+          if [ ! "$pkgcheck" = "E: No packages found" ]; then
+              chroot "$yasp_dir"/working/"$tmpdir" apt-get -dyqq install "$i"
+          fi
+      done
+      umount "$yasp_dir"/working/"$tmpdir" && rmdir "$yasp_dir"/working/"$tmpdir"
+    else
+      chroot "$yasp_dir"/base/"$distro" apt-get -dyqq upgrade
+    fi
 done
 
     ;;
