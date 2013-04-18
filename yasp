@@ -8,6 +8,9 @@
 
 set -e
 
+export LANG=C
+export LC_ALL=C
+
 if [ -z grep CONFIG_AUFS_FS "/boot/config-`uname -a| cut -d' ' -f3`" ]; then
      echo "Your kernel seems to not support aufs, aborting..."
      exit 1
@@ -24,9 +27,6 @@ do
     fi
 done
 
-export LANG=C
-export LC_ALL=C
-
 if [ -z "$yasp_dir" -o -z "$distro" -o -z "$mirror" ]; then
    echo "Something wrong with configuration... check your yasp.conf"
    exit 1
@@ -35,7 +35,7 @@ fi
 
 
 case in "$1"
-    create)
+    init)
 
 #-------------------------------------------------------------------------------
 # prepare directories
