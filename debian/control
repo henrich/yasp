@@ -1,0 +1,14 @@
+Source: yasp
+Section: admin
+Priority: optional
+Maintainer: Hideki Yamane <henrich@debian.org>
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.4
+Homepage: http://github.com/henrich/yasp
+Vcs-Git: git://github.com/henrich/yaps
+Vcs-Browser: https://github.com/henrich/yasp
+
+Package: yasp
+Architecture: all
+Depends: ${misc:Depends}
+Description: Yet Another Simple/Speedy piuparts

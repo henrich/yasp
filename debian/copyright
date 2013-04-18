@@ -1,0 +1,9 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: yasp
+Upstream-Contact: Hideki Yamane <henrich@debian.org>
+Source: https://github.com/henrich/yasp
+
+Files: *
+Copyright: 2013, Hideki Yamane <henrich@debian.org>
+License: GPL-3+
+
