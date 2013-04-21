@@ -160,7 +160,6 @@ do
     fi
 done
 
-exit
 
 packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq`
 for i in $distro
