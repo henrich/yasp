@@ -144,7 +144,7 @@ do
       for p in $package
       do
           tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix="$exec_date" yaspXXXXX`
-          mount -t aufs br="$yasp_dir"/aptcache/"$i":"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/mountdir/"$tmpmountdir"
+          mount -t aufs -o br="$yasp_dir"/aptcache/"$i":"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
           pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p"`
           if [ ! "$pkgcheck" = "E: No packages found" ]; then
               chroot "$yasp_dir"/working/"$tmpdir" apt-get -dyqq install "$p"
@@ -162,7 +162,7 @@ do
         cp -f "$packagelist" "$yasp_dir"/aptcache/"$i"/var/cache/apt/archives/
 	workdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$packagefile"_"$exec_date"`
         tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix="$exec_date"`
-        mount -t aufs br="$yasp_dir"/working/"$workdir":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/mountdir/"$tmpmountdir"
+        mount -t -o aufs br="$yasp_dir"/working/"$workdir":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
 	mount --bind /proc "$yasp_dir"/mountdir/"$tmpmountdir"/proc
 	mount --bind /dev/pts "$yasp_dir"/mountdir/"$tmpmountdir"/dev/pts
 	# inside chroot
