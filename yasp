@@ -134,19 +134,16 @@ for i in $distro
 do
     chroot "$yasp_dir"/base/"$distro" apt-get -qq update
     if [ ! -z "$package" ]; then
-      tmpdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$package"_"`date +%Y%m%d%H%M%S`"`
-      mount -t aufs br="$yasp_dir"/aptcache/"$distro":"$yasp_dir"/base/"$distro":"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/working/"$tmpdir"
       for i in $package
       do
+          tmpdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$package"_"`date +%Y%m%d%H%M%S`"`
+          mount -t aufs br="$yasp_dir"/aptcache/"$distro":"$yasp_dir"/base/"$distro":"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/working/"$tmpdir"
           pkgcheck=`chroot "$yasp_dir"/base/"$distro" apt-cache show -q "$i"`
           if [ ! "$pkgcheck" = "E: No packages found" ]; then
               chroot "$yasp_dir"/working/"$tmpdir" apt-get -dyqq install "$i"
           fi
+          umount "$yasp_dir"/working/"$tmpdir" && rmdir "$yasp_dir"/working/"$tmpdir"
       done
-      umount "$yasp_dir"/working/"$tmpdir" && rmdir "$yasp_dir"/working/"$tmpdir"
-    else
-      # make every .deb files update
-      chroot "$yasp_dir"/base/"$distro" apt-get -dyqq upgrade
     fi
 done
 
