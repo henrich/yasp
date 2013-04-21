@@ -148,7 +148,7 @@ do
       for p in $package
       do
           exec_date=`date +%Y%m%d%H%M%S`
-          tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix="$exec_date"_"$i"_ yaspXXXXX`
+          tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix=_"$p"_"$i"_"$exec_date" yaspXXXXX`
           mount -t aufs -o br="$yasp_dir"/aptcache/"$i":"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
 	  set +e
           pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p" 2>&1`
@@ -172,12 +172,16 @@ do
         mount -t -o aufs br="$workdir":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
 	mount --bind /proc "$yasp_dir"/mountdir/"$tmpmountdir"/proc
 	mount --bind /dev/pts "$yasp_dir"/mountdir/"$tmpmountdir"/dev/pts
+
 	# inside chroot
 	chroot "$tmpmountdir"
+	set +e
 	cd /var/cache/apt/archives/; dpkg -i "$packagelist"
+	set -e
 	apt-get -fy install
-	exit
+
 	# throw chroot away...
+	exit
 	umount "$yasp_dir"/mountdir/"$tmpmountdir"/proc
 	umount "$yasp_dir"/mountdir/"$tmpmountdir"/dev/pts
 	umount "$yasp_dir"/mountdir/"$tmpmountdir"
