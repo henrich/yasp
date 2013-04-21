@@ -26,12 +26,12 @@ fi
 
 #FIXME: kFreeBSD support?
 if [ "$kernel" = Linux ]; then
-    config="/boot/config-`uname -a`"
+    config="/boot/config-`uname -a|cut -d' ' -f3`"
 else
     exit 1
 fi
 
-if [ -z `grep CONFIG_AUFS_FS $config| cut -d' ' -f3` ]; then
+if [ -z `grep CONFIG_AUFS_FS $config ]; then
      echo "Your kernel seems to not support aufs, aborting..."
      exit 1
 fi
