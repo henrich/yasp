@@ -14,6 +14,7 @@ export LC_ALL=C
 if [ ! -z `uname -o | grep Linux` ]; then
     kernel="Linux"
     echo "kernel: Linux"
+    echo ""
 elif [ ! -z `uname -o | grep BSD` ]; then
     kernel="BSD"
     echo "kernel: *BSD"
