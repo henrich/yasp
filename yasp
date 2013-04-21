@@ -25,7 +25,7 @@ else
 fi
 
 #FIXME: kFreeBSD support?
-if [ kernel = Linux ]; then
+if [ "$kernel" = Linux ]; then
     config="/boot/config-`uname -a`"
 else
     exit 1
