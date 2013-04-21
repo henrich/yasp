@@ -177,9 +177,10 @@ do
 	# inside chroot
 	set +e
 	chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/*.deb >/dev/null 2>&1
-	chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
 	set -e
-
+	echo "INSTALL: now apt-get install..."
+	chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
+ 
 	# throw chroot away...
 	umount "$tmpmountdir"/proc && umount "$tmpmountdir"/dev/pts && umount "$tmpmountdir"
 	rm -rf "$workdir"
