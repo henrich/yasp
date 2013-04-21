@@ -69,8 +69,10 @@ done
 if [ ! -d "$yasp_dir"/aptcache/host/var/cache/apt ]; then
    mkdir -p "$yasp_dir"/aptcache/host/var/cache/apt
 fi
-(cd "$yasp_dir"/aptcache/host/var/cache/apt; ln -s /var/cache/apt/archives archives)
 
+if [ !-f "$yasp_dir"/aptcache/host/var/cache/apt/archives ]; then
+    (cd "$yasp_dir"/aptcache/host/var/cache/apt; ln -s /var/cache/apt/archives archives)
+fi
 
 for dir in working mountdir failed
 do
