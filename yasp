@@ -64,15 +64,15 @@ do
 done
 
 #-------------------------------------------------------------------------------
-# create base cow
+# create base cow: use files if it exists, -P = base.tgz, -C = base.cow
 #-------------------------------------------------------------------------------
 
-if [ -d /var/cache/pbuilder/base.cow -o "$2" = -c ]; then
+if [ -d /var/cache/pbuilder/base.cow -o "$2" = -C ]; then
   basedistro=`cat /var/cache/pbuilder/base.cow/etc/apt/sources.list | head -n1 |cut -d' ' -f3`
   if [ ! -d "$yasp_dir"/base/"$basedistro" ]; then
       cp -arp /var/cache/pbuilder/base.cow/* "$yasp_dir"/base/"$basedistro"
   fi
-elif [ -f /var/cache/pbuilder/base.tgz -o "$2" = -p ]; then
+elif [ -f /var/cache/pbuilder/base.tgz -o "$2" = -P ]; then
   basedistro=`cat `tar xvf /var/cache/pbuilder/base.tgz etc/apt/sources.list` |head -n1 |cut -d' ' -f3`
   if [ ! -d "$yasp_dir"/base/"$basedistro" ]; then
       tar -C "$yasp_dir"/base/"$basedistro" -xf /var/cache/pbuilder/base.tgz
@@ -116,6 +116,7 @@ done
     test)
 
 # get package name from changes file, e.g. hail_0.8+0.11.37389dbf9b-1_amd64.changes
+#FIXME: now yasp can only accept .changes file, however probably user want to test .debs
 
 packagefile=`echo $2|grep .changes$`
 
