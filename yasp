@@ -89,7 +89,7 @@ elif [ -f /var/cache/pbuilder/base.tgz -o "$2" = -P ]; then
   fi
 fi
 
-
+base-update {
 for i in $distro
 do
   if [ -d "$yasp_dir"/base/"$distro"/etc ]; then
@@ -99,22 +99,15 @@ do
       debootstrap "$distro" "$yasp_dir"/base/"$distro" "$mirror"
   fi
 done
+}
+    base-update()
 
     ;;
 #-------------------------------------------------------------------------------
 
     base-update)
 
-for i in $distro
-do
-  if [ -d "$yasp_dir"/base/"$distro"/etc ]; then
-      chroot "$yasp_dir"/base/"$distro" apt-get -qq update
-      chroot "$yasp_dir"/base/"$distro" apt-get -dyqq upgrade
-  else
-      debootstrap "$distro" "$yasp_dir"/base/"$distro" "$mirror"
-  fi
-done
-
+    base-update()
     ;;
 #-------------------------------------------------------------------------------
 
