@@ -79,15 +79,15 @@ done
 # create base cow: use files if it exists, -P = base.tgz, -C = base.cow
 #-------------------------------------------------------------------------------
 
-if [ -d /var/cache/pbuilder/base.cow -o "$2" = -C ]; then
+if [ -d "$basecow" -o "$2" = -C ]; then
   basedistro=`cat /var/cache/pbuilder/base.cow/etc/apt/sources.list | head -n1 |cut -d' ' -f3`
   if [ ! -d "$yasp_dir"/base/"$basedistro" ]; then
-      cp -arp /var/cache/pbuilder/base.cow/* "$yasp_dir"/base/"$basedistro"
+      cp -arp "$basecow"/* "$yasp_dir"/base/"$basedistro"
   fi
-elif [ -f /var/cache/pbuilder/base.tgz -o "$2" = -P ]; then
-  basedistro=`cat `tar xvf /var/cache/pbuilder/base.tgz etc/apt/sources.list` |head -n1 |cut -d' ' -f3`
+elif [ -f "$basetgz" -o "$2" = -P ]; then
+  basedistro=`cat `tar xvf "$basetgz" etc/apt/sources.list` |head -n1 |cut -d' ' -f3`
   if [ ! -d "$yasp_dir"/base/"$basedistro" ]; then
-      tar -C "$yasp_dir"/base/"$basedistro" -xf /var/cache/pbuilder/base.tgz
+      tar -C "$yasp_dir"/base/"$basedistro" -xf "$basetgz" 
   fi
 fi
 
