@@ -176,13 +176,15 @@ do
 
 	# inside chroot
 	set +e
-	chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/*.deb
-	chroot "$tmpmountdir" apt-get -fy install
+	chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/*.deb >/dev/null 2>&1
+	chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
 	set -e
 
 	# throw chroot away...
 	umount "$tmpmountdir"/proc && umount "$tmpmountdir"/dev/pts && umount "$tmpmountdir"
+	rm -rf "$workdir"
 done
+    echo "PASS: installation test"
     ;;
 #-------------------------------------------------------------------------------
 
