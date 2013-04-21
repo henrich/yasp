@@ -174,11 +174,10 @@ do
 	mount --bind /dev/pts "$tmpmountdir"/dev/pts
 
 	# inside chroot
-	chroot "$tmpmountdir"
 	set +e
-	cd /var/cache/apt/archives/; dpkg -i "$packagelist"
+	chroot "$tmpmountdir" dpkg -i /var/cache/apt/archives/{$packagelist}
+	chroot "$tmpmountdir" apt-get -fy install
 	set -e
-	apt-get -fy install
 
 	# throw chroot away...
 	exit
