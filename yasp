@@ -11,9 +11,9 @@ set -e
 export LANG=C
 export LC_ALL=C
 
-if [ ! -z `grep Linux `uname -o`` ]; then
+if [ ! -z `uname -o | grep Linux` ]; then
     echo "kernel: Linux"
-elif [ ! -z `grep BSD `uname -o`` ]; then
+elif [ ! -z `uname -o | grep BSD` ]; then
     echo "kernel: *BSD"
     echo "it doesn't support aufs, aborting..."
     exit 1
