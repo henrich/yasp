@@ -136,17 +136,36 @@ do
     if [ ! -z "$package" ]; then
       for i in $package
       do
-          tmpdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$package"_"`date +%Y%m%d%H%M%S`"`
-          mount -t aufs br="$yasp_dir"/aptcache/"$distro":"$yasp_dir"/base/"$distro":"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/working/"$tmpdir"
+          tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix="`date +%Y%m%d%H%M%S`"`
+          mount -t aufs br="$yasp_dir"/aptcache/"$distro":"$yasp_dir"/base/"$distro"=ro:"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/mountdir/"$tmpmountdir"
           pkgcheck=`chroot "$yasp_dir"/base/"$distro" apt-cache show -q "$i"`
           if [ ! "$pkgcheck" = "E: No packages found" ]; then
               chroot "$yasp_dir"/working/"$tmpdir" apt-get -dyqq install "$i"
           fi
-          umount "$yasp_dir"/working/"$tmpdir" && rmdir "$yasp_dir"/working/"$tmpdir"
+          umount "$yasp_dir"/mountdir/"$tmpmountdir" && rmdir "$yasp_dir"/mountdir/"$tmpmountdir"
       done
     fi
 done
 
+packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq`
+for i in $distro
+do
+        cp -f "$packagelist" "$yasp_dir"/aptcache/"$distro"/var/cache/apt/archives/
+	workdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$packagefile"_"`date +%Y%m%d%H%M%S`"`
+        tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix="`date +%Y%m%d%H%M%S`"`
+        mount -t aufs br="$yasp_dir"/working/"$workdir":"$yasp_dir"/aptcache/"$distro"=ro:"$yasp_dir"/base/"$distro"=ro:"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/mountdir/"$tmpmountdir"
+	mount --bind /proc "$yasp_dir"/mountdir/"$tmpmountdir"/proc
+	mount --bind /dev/pts "$yasp_dir"/mountdir/"$tmpmountdir"/dev/pts
+	# inside chroot
+	chroot "$yasp_dir"/mountdir/"$tmpmountdir"
+	cd /var/cache/apt/archives/; dpkg -i "$packagelist"
+	apt-get -fy install
+	exit
+	# throw chroot away...
+	umount "$yasp_dir"/mountdir/"$tmpmountdir"/proc
+	umount "$yasp_dir"/mountdir/"$tmpmountdir"/dev/pts
+	umount "$yasp_dir"/mountdir/"$tmpmountdir"
+done
     ;;
 #-------------------------------------------------------------------------------
 
