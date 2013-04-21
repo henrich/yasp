@@ -142,6 +142,7 @@ do
       done
       umount "$yasp_dir"/working/"$tmpdir" && rmdir "$yasp_dir"/working/"$tmpdir"
     else
+      # make every .deb files update
       chroot "$yasp_dir"/base/"$distro" apt-get -dyqq upgrade
     fi
 done
