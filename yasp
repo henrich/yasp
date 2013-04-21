@@ -163,12 +163,12 @@ do
 done
 
 
-packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq`
+packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq|tr '\n' ' '`
 for i in $distro
 do
-        cp -f "$packagelist" "$yasp_dir"/aptcache/"$i"/var/cache/apt/archives/
-	workdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
-        tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
+        cp -f $packagelist "$yasp_dir"/aptcache/"$i"/var/cache/apt/archives/
+	workdir=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
+        tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
         mount -t -o aufs br="$workdir":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
 	mount --bind /proc "$yasp_dir"/mountdir/"$tmpmountdir"/proc
 	mount --bind /dev/pts "$yasp_dir"/mountdir/"$tmpmountdir"/dev/pts
