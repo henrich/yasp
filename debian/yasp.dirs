@@ -1,6 +1,5 @@
 usr/sbin
 var/cache/yasp/base
-var/cache/yasp/aptcache
 var/cache/yasp/aptcache/host/var/cache/apt/
 var/cache/yasp/working
 var/cache/yasp/mountdir
