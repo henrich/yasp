@@ -138,16 +138,16 @@ fi
 
 for i in $distro
 do
-    exec_date=`date +%Y%m%d%H%M%S`
     chroot "$yasp_dir"/base/"$i" apt-get -qq update
     if [ ! -z "$package" ]; then
       for p in $package
       do
-          tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix="$exec_date" yaspXXXXX`
+          exec_date=`date +%Y%m%d%H%M%S`
+          tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix="$exec_date"_"$i"_ yaspXXXXX`
           mount -t aufs -o br="$yasp_dir"/aptcache/"$i":"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
           pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p"`
           if [ ! "$pkgcheck" = "E: No packages found" ]; then
-              chroot "$yasp_dir"/working/"$tmpdir" apt-get -dyqq install "$p"
+              chroot "$tmpmountdir" apt-get -dyqq install "$p"
           fi
           umount "$yasp_dir"/mountdir/"$tmpmountdir" && rmdir "$yasp_dir"/mountdir/"$tmpmountdir"
       done
