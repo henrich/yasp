@@ -170,8 +170,8 @@ do
 	workdir=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
         tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
         mount -t aufs -o br="$workdir":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
-	mount --bind /proc "$yasp_dir"/mountdir/"$tmpmountdir"/proc
-	mount --bind /dev/pts "$yasp_dir"/mountdir/"$tmpmountdir"/dev/pts
+	mount --bind /proc "$tmpmountdir"/proc
+	mount --bind /dev/pts "$tmpmountdir"/dev/pts
 
 	# inside chroot
 	chroot "$tmpmountdir"
