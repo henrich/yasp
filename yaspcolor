@@ -1,0 +1,4 @@
+start_green='\e[32m'
+start_yellow='\e[33m'
+start_red='\e[31m'
+end_color='\e[m'

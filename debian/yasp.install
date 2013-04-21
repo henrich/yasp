@@ -1,2 +1,3 @@
 yasp.conf	etc
 yasp	usr/sbin/
+yaspcolor	usr/lib/yasp/

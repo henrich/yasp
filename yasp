@@ -51,6 +51,9 @@ if [ -z "$yasp_dir" -o -z "$distro" -o -z "$mirror" ]; then
    exit 1
 fi
 
+if [ -d /usr/lib/yasp ]; then
+    . /usr/lib/yasp/*
+fi
 
 create()
 {
@@ -178,14 +181,21 @@ do
 	set +e
 	chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/*.deb >/dev/null 2>&1
 	set -e
-	echo "INSTALL: now apt-get install..."
+	echo -e "${start_yellow}INSTALL${end_color}: now apt-get install..."
 	chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
+
+	workdir_rm=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
+	mount -o remount,append:"$workdir_rm" "$tmpmountdir"
+	echo -e "${start_yellow}REMOVE${end_color}: now apt-get remove..."
+	chroot "$tmpmountdir" apt-get -yqq remove $package
+	chroot "$tmpmountdir" apt-get -yqq autoremove
+        umount "$workdir_rm"
  
 	# throw chroot away...
 	umount "$tmpmountdir"/proc && umount "$tmpmountdir"/dev/pts && umount "$tmpmountdir"
-	rm -rf "$workdir"
+	rm -rf "$workdir" "$workdir_rm"
 done
-    echo "PASS: installation test"
+    echo -e "${start_green}PASS: installation test${end_color}"
     ;;
 #-------------------------------------------------------------------------------
 
