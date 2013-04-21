@@ -145,8 +145,10 @@ do
           exec_date=`date +%Y%m%d%H%M%S`
           tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix="$exec_date"_"$i"_ yaspXXXXX`
           mount -t aufs -o br="$yasp_dir"/aptcache/"$i":"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
-          pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p"`
-          if [ ! "$pkgcheck" = "E: No packages found" ]; then
+	  set +e
+          pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p" 2>&1`
+          set -e
+	  if [ ! "$pkgcheck" = "E: No packages found" ]; then
               chroot "$tmpmountdir" apt-get -dyqq install "$p"
           fi
           umount "$tmpmountdir" && rmdir "$tmpmountdir"
@@ -160,13 +162,13 @@ packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq`
 for i in $distro
 do
         cp -f "$packagelist" "$yasp_dir"/aptcache/"$i"/var/cache/apt/archives/
-	workdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$packagefile"_"$exec_date"`
+	workdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$i"_"$packagefile"_"$exec_date"`
         tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix="$exec_date"`
         mount -t -o aufs br="$yasp_dir"/working/"$workdir":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
 	mount --bind /proc "$yasp_dir"/mountdir/"$tmpmountdir"/proc
 	mount --bind /dev/pts "$yasp_dir"/mountdir/"$tmpmountdir"/dev/pts
 	# inside chroot
-	chroot "$yasp_dir"/mountdir/"$tmpmountdir"
+	chroot "$tmpmountdir"
 	cd /var/cache/apt/archives/; dpkg -i "$packagelist"
 	apt-get -fy install
 	exit
@@ -179,7 +181,7 @@ done
 #-------------------------------------------------------------------------------
 
     help | *)
-    cat << END >&2
+    cat << END 
 init 
 base-update
 test
