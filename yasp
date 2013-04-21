@@ -149,7 +149,7 @@ do
           if [ ! "$pkgcheck" = "E: No packages found" ]; then
               chroot "$tmpmountdir" apt-get -dyqq install "$p"
           fi
-          umount "$yasp_dir"/mountdir/"$tmpmountdir" && rmdir "$yasp_dir"/mountdir/"$tmpmountdir"
+          umount "$tmpmountdir" && rmdir "$tmpmountdir"
       done
     fi
 done
