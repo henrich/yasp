@@ -183,10 +183,14 @@ done
 
     help | *)
     cat << END 
-init 
-base-update
-test
-help
+    Usage: yasp (init|base-update|test <changes file> |help)
+
+    Option:
+      init        : create COW base environment for each distribution
+      base-update : update COW base environment for each distribution
+      test        : specify changes file and exec test
+                    (install/uninstall/remove/purge/uninstall)
+      help        : show this message
 END
 
     ;;
