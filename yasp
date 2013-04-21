@@ -143,7 +143,7 @@ do
     if [ ! -z "$package" ]; then
       for p in $package
       do
-          tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix="$exec_date" yaspXXXXX`
+          tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix="$exec_date" yaspXXXXX`
           mount -t aufs br="$yasp_dir"/aptcache/"$distro":"$yasp_dir"/base/"$distro"=ro:"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/mountdir/"$tmpmountdir"
           pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p"`
           if [ ! "$pkgcheck" = "E: No packages found" ]; then
