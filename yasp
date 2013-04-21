@@ -11,7 +11,15 @@ set -e
 export LANG=C
 export LC_ALL=C
 
-if [ -z grep CONFIG_AUFS_FS "/boot/config-`uname -a| cut -d' ' -f3`" ]; then
+if [ ! -z `grep Linux `uname -o`` ]; then
+    echo "kernel: Linux"
+elif [ ! -z `grep BSD `uname -o`` ]; then
+    echo "kernel: *BSD"
+else
+    echo "kernel: unknown, aborting..."
+    exit 1
+fi
+
 if [ -z `grep CONFIG_AUFS_FS "/boot/config-`uname -a| cut -d' ' -f3`"` ]; then
      echo "Your kernel seems to not support aufs, aborting..."
      exit 1
