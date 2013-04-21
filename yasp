@@ -149,6 +149,7 @@ do
           pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p" 2>&1`
           set -e
 	  if [ ! "$pkgcheck" = "E: No packages found" ]; then
+              echo "caching .deb files..."
               chroot "$tmpmountdir" apt-get -dyqq install "$p"
           fi
           umount "$tmpmountdir" && rmdir "$tmpmountdir"
