@@ -31,7 +31,7 @@ else
     exit 1
 fi
 
-if [ -z `grep CONFIG_AUFS_FS $config ]; then
+if [ -z `grep CONFIG_AUFS_FS $config` ]; then
      echo "Your kernel seems to not support aufs, aborting..."
      exit 1
 fi
@@ -40,12 +40,10 @@ fi
 # read configuration
 #-------------------------------------------------------------------------------
 
-for conf in /etc/yasp.conf ${HOME}/.yasp.conf
-do
-    if [ -f $conf ]; then
-        . $conf
-    fi
-done
+if [ -f /etc/yasp.conf ]; then
+    . /etc/yasp.conf
+fi
+
 
 if [ -z "$yasp_dir" -o -z "$distro" -o -z "$mirror" ]; then
    echo "Something wrong with configuration... check your yasp.conf"
@@ -53,21 +51,18 @@ if [ -z "$yasp_dir" -o -z "$distro" -o -z "$mirror" ]; then
 fi
 
 
-
-case in "$1"
-    init)
-
+create()
+{
 #-------------------------------------------------------------------------------
 # prepare directories
 #-------------------------------------------------------------------------------
-
 for i in $distro
 do
-  if [ ! -d "$yasp_dir"/base/"$distro" ]; then
-      mkdir -p "$yasp_dir"/base/"$distro"
+  if [ ! -d "$yasp_dir"/base/"$i" ]; then
+      mkdir -p "$yasp_dir"/base/"$i"
   fi
-  if [ ! -d "$yasp_dir"/aptcache/"$distro"/var/cache/apt/archives ]; then
-      mkdir "$yasp_dir"/aptcache/"$distro"/var/cache/apt/archives
+  if [ ! -d "$yasp_dir"/aptcache/"$i"/var/cache/apt/archives ]; then
+      mkdir -p "$yasp_dir"/aptcache/"$i"/var/cache/apt/archives
   fi
 done
 
@@ -89,39 +84,42 @@ done
 
 if [ -d "$basecow" -o "$2" = -C ]; then
   basedistro=`cat /var/cache/pbuilder/base.cow/etc/apt/sources.list | head -n1 |cut -d' ' -f3`
-  if [ ! -d "$yasp_dir"/base/"$basedistro" ]; then
+  if [ ! -d "$yasp_dir"/base/"$basedistro"/etc ]; then
       cp -arp "$basecow"/* "$yasp_dir"/base/"$basedistro"
   fi
 elif [ -f "$basetgz" -o "$2" = -P ]; then
   basedistro=`cat `tar xvf "$basetgz" etc/apt/sources.list` |head -n1 |cut -d' ' -f3`
-  if [ ! -d "$yasp_dir"/base/"$basedistro" ]; then
+  if [ ! -d "$yasp_dir"/base/"$basedistro"/etc ]; then
       tar -C "$yasp_dir"/base/"$basedistro" -xf "$basetgz" 
   fi
 fi
+}
 
-base-update()
+base_update()
 {
 for i in $distro
 do
-  if [ -d "$yasp_dir"/base/"$distro"/etc ]; then
-      chroot "$yasp_dir"/base/"$distro" apt-get -qq update
-      chroot "$yasp_dir"/base/"$distro" apt-get -dyqq upgrade
+  if [ -d "$yasp_dir"/base/"$i"/etc ]; then
+      chroot "$yasp_dir"/base/"$i" apt-get -qq update
+      chroot "$yasp_dir"/base/"$i" apt-get -dyqq upgrade
   else
-      debootstrap "$distro" "$yasp_dir"/base/"$distro" "$mirror"
+      debootstrap "$i" "$yasp_dir"/base/"$i" "$mirror"
   fi
 done
 }
-    base-update()
 
+
+case "$1" in
+    init)
+    create
+    base_update
     ;;
-#-------------------------------------------------------------------------------
 
     base-update)
-
-    base-update()
+    base_update
     ;;
-#-------------------------------------------------------------------------------
 
+#-------------------------------------------------------------------------------
     test)
 
 # get package name from changes file, e.g. hail_0.8+0.11.37389dbf9b-1_amd64.changes
@@ -140,13 +138,14 @@ fi
 
 for i in $distro
 do
-    chroot "$yasp_dir"/base/"$distro" apt-get -qq update
+    exec_date=`date +%Y%m%d%H%M%S`
+    chroot "$yasp_dir"/base/"$i" apt-get -qq update
     if [ ! -z "$package" ]; then
       for i in $package
       do
-          tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix="`date +%Y%m%d%H%M%S`"`
+          tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix="$exec_date"`
           mount -t aufs br="$yasp_dir"/aptcache/"$distro":"$yasp_dir"/base/"$distro"=ro:"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/mountdir/"$tmpmountdir"
-          pkgcheck=`chroot "$yasp_dir"/base/"$distro" apt-cache show -q "$i"`
+          pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$i"`
           if [ ! "$pkgcheck" = "E: No packages found" ]; then
               chroot "$yasp_dir"/working/"$tmpdir" apt-get -dyqq install "$i"
           fi
@@ -158,10 +157,10 @@ done
 packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq`
 for i in $distro
 do
-        cp -f "$packagelist" "$yasp_dir"/aptcache/"$distro"/var/cache/apt/archives/
-	workdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$packagefile"_"`date +%Y%m%d%H%M%S`"`
-        tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix="`date +%Y%m%d%H%M%S`"`
-        mount -t aufs br="$yasp_dir"/working/"$workdir":"$yasp_dir"/aptcache/"$distro"=ro:"$yasp_dir"/base/"$distro"=ro:"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/mountdir/"$tmpmountdir"
+        cp -f "$packagelist" "$yasp_dir"/aptcache/"$i"/var/cache/apt/archives/
+	workdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$packagefile"_"$exec_date"`
+        tmpmountdir=`mktemp -d --tmpdir "$yasp_dir"/mountdir --suffix="$exec_date"`
+        mount -t aufs br="$yasp_dir"/working/"$workdir":"$yasp_dir"/aptcache/"$distro"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$yasp_dir"/mountdir/"$tmpmountdir"
 	mount --bind /proc "$yasp_dir"/mountdir/"$tmpmountdir"/proc
 	mount --bind /dev/pts "$yasp_dir"/mountdir/"$tmpmountdir"/dev/pts
 	# inside chroot
@@ -178,12 +177,12 @@ done
 #-------------------------------------------------------------------------------
 
     help | *)
-    echo <<EOL>&2
+    cat << END >&2
 init 
 base-update
 test
 help
-EOL
+END
 
     ;;
 esac
