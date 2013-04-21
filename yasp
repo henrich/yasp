@@ -12,8 +12,10 @@ export LANG=C
 export LC_ALL=C
 
 if [ ! -z `uname -o | grep Linux` ]; then
+    kernel="Linux"
     echo "kernel: Linux"
 elif [ ! -z `uname -o | grep BSD` ]; then
+    kernel="BSD"
     echo "kernel: *BSD"
     echo "it doesn't support aufs, aborting..."
     exit 1
@@ -23,7 +25,13 @@ else
 fi
 
 #FIXME: kFreeBSD support?
-if [ -z `grep CONFIG_AUFS_FS "/boot/config-`uname -a| cut -d' ' -f3`"` ]; then
+if [ kernel = Linux ]; then
+    config="/boot/config-`uname -a`"
+else
+    exit 1
+fi
+
+if [ -z `grep CONFIG_AUFS_FS $config| cut -d' ' -f3` ]; then
      echo "Your kernel seems to not support aufs, aborting..."
      exit 1
 fi
