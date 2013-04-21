@@ -105,8 +105,6 @@ do
       chroot "$yasp_dir"/base/"$distro" apt-get -dyqq upgrade
   else
       debootstrap "$distro" "$yasp_dir"/base/"$distro" "$mirror"
-      cp "$yasp_dir"/base/"$distro"/var/cache/apt/archives/*.deb \
-         "$yasp_dir"aptcache/"$distro"/var/cache/apt/archives/
   fi
 done
 
