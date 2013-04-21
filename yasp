@@ -128,6 +128,7 @@ fi
 # cache *.deb to aptcache
 
 for i in $distro
+do
     chroot "$yasp_dir"/base/"$distro" apt-get -qq update
     if [ ! -z "$package" ]; then
       tmpdir=`mktemp -d --tmpdir "$yasp_dir"/working --suffix="$distro"_"$package"_"`date +%Y%m%d%H%M%S`"`
