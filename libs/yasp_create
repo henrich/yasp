@@ -1,9 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
 create()
 {
-#-------------------------------------------------------------------------------
-# prepare directories
-#-------------------------------------------------------------------------------
 for i in $distro
 do
   if [ ! -d "$yasp_dir"/base/"$i" ]; then
@@ -32,7 +30,6 @@ done
 #-------------------------------------------------------------------------------
 # create base cow: use files if it exists, -P = base.tgz, -C = base.cow
 #-------------------------------------------------------------------------------
-
 if [ -d "$basecow" -o "$2" = -C ]; then
   basedistro=`cat /var/cache/pbuilder/base.cow/etc/apt/sources.list | head -n1 |cut -d' ' -f3`
   if [ ! -d "$yasp_dir"/base/"$basedistro"/etc ]; then
@@ -45,4 +42,3 @@ elif [ -f "$basetgz" -o "$2" = -P ]; then
   fi
 fi
 }
-
