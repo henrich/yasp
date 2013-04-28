@@ -7,7 +7,7 @@ yasp - yet another piuparts : test .deb package installation
 
 SYNOPSIS
 --------
-*yasp* ['init'] ['-CP'] ['test' [_changes_file_]]
+*yasp* ['init'] ['-CP'] ['test'] [_changes_file_]
 
 DESCRIPTION
 -----------
@@ -31,7 +31,7 @@ Options must come before the other command line arguments.
 *-C*::
   Use it with *init* option, uses cowbuilder's base.cow files for the initial chroot, instead of building a new one with debootstrap.
 
-*-P*'::
+*-P*::
   Use it with *init* option, uses pbuilder's base.tgz tarball as the contents of the initial chroot, instead of building a new one with debootstrap.
 
 *test*::
@@ -42,7 +42,7 @@ EXAMPLES
 Just simply use *test* option as below.
 
 ----
-# yasp test ../foo_1.0-2_amd64.changes
+yasp test ../foo_1.0-2_amd64.changes
 ----
 
 SEE ALSO
@@ -56,5 +56,3 @@ Hideki Yamane <henrich@debian.org>
 DATE
 ----
 2013-04-27
-
-// vim: set filetype=asciidoc:
