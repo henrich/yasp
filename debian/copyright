@@ -6,4 +6,14 @@ Source: https://github.com/henrich/yasp
 Files: *
 Copyright: 2013, Hideki Yamane <henrich@debian.org>
 License: GPL-3+
- see /usr/share/common-licenses/GPL-3
+ You can redistribute this software and/or modify it under the terms of
+ the GNU General Public License Version 3 or later as published by
+ the Free Software Foundation.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ Version 3 can be found in /usr/share/common-licenses/GPL-3 file.
