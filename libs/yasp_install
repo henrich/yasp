@@ -1,0 +1,15 @@
+#!/bin/sh
+
+yasp_install()
+{
+  lst_before=`mktemp ${srcpackage}XXXXX`
+  chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_before"
+  set +e
+  echo -e "${start_yellow}INSTALL${end_color}: install package(s)..."
+  for pkg in $packagelist
+  do
+    chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/"$pkg" >/dev/null 2>&1
+  done
+  set -e
+  chroot "$tmpmountdir" apt-get -fyqq install >/dev/null 2>&1
+}

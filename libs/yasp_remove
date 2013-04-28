@@ -1,0 +1,15 @@
+#!/bin/sh
+
+yasp_remove()
+{
+  workdir_rm=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
+  mount -o remount,append:"$workdir_rm" "$tmpmountdir"
+  lst_after=`mktemp ${srcpackage}XXXXX`
+  chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_after"
+  lst_diff=`mktemp ${srcpackage}XXXXX`
+  diff -u /tmp/"$lst_before" /tmp/"$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > /tmp/"$lst_diff"
+  cp /tmp/"$lst_diff" "$tmpmountdir"/tmp
+  echo -e "${start_yellow}REMOVE${end_color}: remove package(s)..."
+  chroot "$tmpmountdir" dpkg --remove `cat /tmp/$lst_diff` > /dev/null 2>&1
+  mount -o remount,del:"$workdir_rm" "$tmpmountdir"
+}

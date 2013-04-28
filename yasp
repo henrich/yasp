@@ -47,7 +47,6 @@ if [ -f /etc/yasp.conf ]; then
     . /etc/yasp.conf
 fi
 
-
 if [ -z "$yasp_dir" -o -z "$distro" -o -z "$mirror" ]; then
    echo "Something wrong with configuration... check your yasp.conf"
    exit 1
@@ -69,51 +68,27 @@ case "$1" in
 
     test)
 
-# get package name from changes file, e.g. hail_0.8+0.11.37389dbf9b-1_amd64.changes
-#FIXME: now yasp can only accept .changes file, however probably user want to test .debs
+    # get package name from changes file, e.g. hail_0.8+0.11.37389dbf9b-1_amd64.changes
+    #FIXME: now yasp can only accept .changes file, however probably user want to test .debs
 
-pwd=`pwd`
-packagefile=`echo $2|grep .changes$`
-srcpackage=`echo $2|sed -e s%"$pwd"%% -e %/%%|cut -d'_' -f1`
+    pwd=`pwd`
+    packagefile=`echo $2|grep .changes$`
+    srcpackage=`echo $2|sed -e s%"$pwd"%% -e %/%%|cut -d'_' -f1`
 
-if [ -z "$packagefile" ]; then
-    echo "Please specify .changes file"
-    exit 1
-else
-    package=`cat $packagefile | cut -d' ' -f4|grep .deb$|sort|uniq|cut -d'_' -f1`
-fi
-
-# cache *.deb to aptcache
-
-for i in $distro
-do
-    chroot "$yasp_dir"/base/"$i" apt-get -qq update
-    if [ ! -z "$package" ]; then
-      for p in $package
-      do
-          exec_date=`date +%Y%m%d%H%M%S`
-          tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix=_"$p"_"$i"_"$exec_date" yaspXXXXX`
-          mount -t aufs -o br="$yasp_dir"/aptcache/"$i":"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
-	  set +e
-          pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p" 2>&1`
-          set -e
-	  if [ ! "$pkgcheck" = "E: No packages found" ]; then
-              echo -e "caching .deb files for ${start_green}${p}${end_color}..."
-              chroot "$tmpmountdir" apt-get -dyqq install "$p"
-	  else
-	      # if there's no package in repo, not exec upgrade path
-	      not_upgrade="yes"
-          fi
-          umount "$tmpmountdir" && rmdir "$tmpmountdir"
-      done
+    if [ -z "$packagefile" ]; then
+        echo "Please specify .changes file"
+        exit 1
+    else
+        package=`cat $packagefile | cut -d' ' -f4|grep .deb$|sort|uniq|cut -d'_' -f1`
     fi
-done
 
-# install, uninstall, purge and upgrade test
+    # cache *.deb to aptcache
+    yasp_cache
 
-packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq|tr '\n' ' '`
-for i in $distro
-do
+    # install, uninstall, purge and upgrade test
+    packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq|tr '\n' ' '`
+    for i in $distro
+    do
 	workdir=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$i"_"$exec_date" ${srcpackage}XXXXX`
         tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix=_"$i"_"$exec_date" ${srcpackage}XXXXX`
         mount -t aufs -o br="$workdir":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
@@ -122,74 +97,16 @@ do
 	chroot "$tmpmountdir" mkdir -p "$yasp_dir"/aptcache/"$i"
         cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/
 
-	# inside chroot
-	lst_before=`mktemp ${srcpackage}XXXXX`
-	chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_before"
-	set +e
-	echo -e "${start_yellow}INSTALL${end_color}: install package(s)..."
-	for pkg in $packagelist
-	do
-	  chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/"$pkg" >/dev/null 2>&1
-	done
-	set -e
-	chroot "$tmpmountdir" apt-get -fyqq install >/dev/null 2>&1
-
-        #-----------------------------------------------------------------------
-	# remove
-        #-----------------------------------------------------------------------
-	workdir_rm=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
-	mount -o remount,append:"$workdir_rm" "$tmpmountdir"
-	lst_after=`mktemp ${srcpackage}XXXXX`
-	chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_after"
-	lst_diff=`mktemp ${srcpackage}XXXXX`
-	diff -u /tmp/"$lst_before" /tmp/"$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > /tmp/"$lst_diff"
-	cp /tmp/"$lst_diff" "$tmpmountdir"/tmp
-	echo -e "${start_yellow}REMOVE${end_color}: remove package(s)..."
-	chroot "$tmpmountdir" dpkg --remove `cat /tmp/$lst_diff` > /dev/null 2>&1
-	mount -o remount,del:"$workdir_rm" "$tmpmountdir"
-
-        #-----------------------------------------------------------------------
-	# purge
-        #-----------------------------------------------------------------------
-	workdir_purge=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
-	mount -o remount,append:"$workdir_purge" "$tmpmountdir"
-	lst_after=`mktemp ${srcpackage}XXXXX`
-        chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_after"
-        lst_diff=`mktemp ${srcpackage}XXXXX`
-	diff -u /tmp/"$lst_before" /tmp/"$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > /tmp/"$lst_diff"
-        cp /tmp/"$lst_diff" "$tmpmountdir"/tmp; rm /tmp/"$lst_after"
-	echo -e "${start_yellow}PURGE${end_color}: purge package(s)..."
-	chroot "$tmpmountdir" dpkg --purge `cat /tmp/$lst_diff` > /dev/null 2>&1
-	chroot "$tmpmountdir" rm /tmp/$lst_diff
-	mount -o remount,del:"$workdir_purge" "$tmpmountdir"
-
-        #-----------------------------------------------------------------------
-	# upgrade
-        #-----------------------------------------------------------------------
-	if [ -z $not_upgrade ]; then
-	    workdir_upgrade=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
-	    mount -o remount,append:"$workdir_upgrade" "$tmpmountdir"
-            cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/
-	    echo -e "${start_yellow}UPGRADE${end_color}: upgrade package(s)..."
-	    chroot "$tmpmountdir" apt-get install -yfqq `echo "$package" |sed ':loop; N; $!b loop; ;s/\n/\ /g'` >/dev/null 2>&1
-	    for pkg in $packagelist
-	    do
-	      chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/"$pkg" >/dev/null 2>&1
-	    done
-	    mount -o remount,del:"$workdir_upgrade" "$tmpmountdir"
-	fi
-
 	# throw chroot away...
-	for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"
-	do 
-	  umount $mountd
-	done
-done
-    rm -rf "$workdir" "$workdir_rm"
+	trap 'for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"; do umount $mountd; done; \
+		echo -e "${start_red}`mount|grep aufs`${end_color}"' 1 2 3 15
+	yasp_install; yasp_remove; yasp_purge; yasp_upgrade
+        trap 'for directory in "$workdir" "$workdir_rm" "$workdir_purge" "$workdir_upgrade"; \
+	      do if [ -d $directory ]; then rm -rf $directory; done; \
+	      echo -e "${start_red}`mount|grep aufs`${end_color}"' EXIT
+    done
     echo -e "${start_green}PASS: install/remove/purge/upgrade test${end_color}"
-    echo -e "${start_red}`mount|grep aufs`${end_color}"
     ;;
-#-------------------------------------------------------------------------------
 
     help | *)
     cat << END 

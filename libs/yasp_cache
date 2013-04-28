@@ -1,0 +1,28 @@
+#!/bin/sh
+
+yasp_cache()
+{
+for i in $distro
+do
+    chroot "$yasp_dir"/base/"$i" apt-get -qq update
+    if [ ! -z "$package" ]; then
+      for p in $package
+      do
+          exec_date=`date +%Y%m%d%H%M%S`
+          tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix=_"$p"_"$i"_"$exec_date" yaspXXXXX`
+          mount -t aufs -o br="$yasp_dir"/aptcache/"$i":"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
+          set +e
+          pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p" 2>&1`
+          set -e
+          if [ ! "$pkgcheck" = "E: No packages found" ]; then
+              echo -e "caching .deb files for ${start_green}${p}${end_color}..."
+              chroot "$tmpmountdir" apt-get -dyqq install "$p"
+          else
+              # if there's no package in repo, not exec upgrade path
+              not_upgrade="yes"
+          fi
+          umount "$tmpmountdir" && rmdir "$tmpmountdir"
+      done
+    fi
+done
+}
