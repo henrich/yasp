@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -xv
 #
 # yasp - Yet Another Simple/Speedy Piuparts
 #
@@ -53,17 +53,20 @@ if [ -z "$yasp_dir" -o -z "$distro" -o -z "$mirror" ]; then
 fi
 
 if [ -d /usr/lib/yasp ]; then
-    . /usr/lib/yasp/*
+    for file in /usr/lib/yasp/*
+    do
+      . $file
+    done
 fi
 
 case "$1" in
     init)
-    create
-    base_update
+    yasp_create
+    yasp_base_update
     ;;
 
     base-update)
-    base_update
+    yasp_base_update
     ;;
 
     test)
@@ -73,7 +76,7 @@ case "$1" in
 
     pwd=`pwd`
     packagefile=`echo $2|grep .changes$`
-    srcpackage=`echo $2|sed -e s%"$pwd"%% -e %/%%|cut -d'_' -f1`
+    srcpackage=`basename $2|cut -d'_' -f1`
 
     if [ -z "$packagefile" ]; then
         echo "Please specify .changes file"
@@ -95,7 +98,7 @@ case "$1" in
 	mount --bind /proc "$tmpmountdir"/proc
 	mount --bind /dev/pts "$tmpmountdir"/dev/pts
 	chroot "$tmpmountdir" mkdir -p "$yasp_dir"/aptcache/"$i"
-        cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/
+	(cd `dirname $2`; cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/)
 
 	# throw chroot away...
 	trap 'for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"; do umount $mountd; done; \

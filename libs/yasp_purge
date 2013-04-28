@@ -4,13 +4,14 @@ yasp_purge()
 {
   workdir_purge=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
   mount -o remount,append:"$workdir_purge" "$tmpmountdir"
-  lst_after=`mktemp ${srcpackage}XXXXX`
+  lst_after=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
   chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_after"
-  lst_diff=`mktemp ${srcpackage}XXXXX`
+  lst_diff=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
   diff -u /tmp/"$lst_before" /tmp/"$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > /tmp/"$lst_diff"
   cp /tmp/"$lst_diff" "$tmpmountdir"/tmp; rm /tmp/"$lst_after"
   echo -e "${start_yellow}PURGE${end_color}: purge package(s)..."
-  chroot "$tmpmountdir" dpkg --purge `cat /tmp/$lst_diff` > /dev/null 2>&1
+  chroot "$tmpmountdir" dpkg --purge `cat /tmp/$lst_diff` 
+  #chroot "$tmpmountdir" dpkg --purge `cat /tmp/$lst_diff` > /dev/null 2>&1
   chroot "$tmpmountdir" rm /tmp/$lst_diff
   mount -o remount,del:"$workdir_purge" "$tmpmountdir"
 }

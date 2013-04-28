@@ -1,6 +1,6 @@
 #!/bin/sh
 
-base_update()
+yasp_base_update()
 {
 for i in $distro
 do

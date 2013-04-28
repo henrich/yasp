@@ -2,7 +2,7 @@
 
 yasp_install()
 {
-  lst_before=`mktemp ${srcpackage}XXXXX`
+  lst_before=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
   chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_before"
   set +e
   echo -e "${start_yellow}INSTALL${end_color}: install package(s)..."

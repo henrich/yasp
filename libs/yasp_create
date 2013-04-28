@@ -1,6 +1,6 @@
 #!/bin/bash
 
-create()
+yasp_create()
 {
 for i in $distro
 do
