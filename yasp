@@ -158,7 +158,7 @@ do
           pkgcheck=`chroot "$yasp_dir"/base/"$i" apt-cache show -q "$p" 2>&1`
           set -e
 	  if [ ! "$pkgcheck" = "E: No packages found" ]; then
-              echo "caching .deb files for $p..."
+              echo -e "caching .deb files for ${start_green}${p}${end_color}..."
               chroot "$tmpmountdir" apt-get -dyqq install "$p"
 	  else
 	      # if there's no package in repo, not exec upgrade path
@@ -231,7 +231,6 @@ do
 	    mount -o remount,append:"$workdir_upgrade" "$tmpmountdir"
             cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/
 	    echo -e "${start_yellow}UPGRADE${end_color}: upgrade package(s)..."
-	    echo "(Please ignore debconf warnings)"
 	    chroot "$tmpmountdir" apt-get install -yfqq "$package" >/dev/null 2>&1
 	    for pkg in $packagelist
 	    do
@@ -245,8 +244,8 @@ do
 	do 
 	  umount $mountd
 	done
-	rm -rf "$workdir" "$workdir_rm"
 done
+    rm -rf "$workdir" "$workdir_rm"
     echo -e "${start_green}PASS: installation test${end_color}"
     ;;
 #-------------------------------------------------------------------------------
