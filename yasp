@@ -2,7 +2,7 @@
 #
 # yasp - Yet Another Simple/Speedy Piuparts
 #
-# 2013 Hideki Yamane <henrich@debian.or.jp>
+# 2013 Hideki Yamane <henrich@debian.org/or.jp>
 # 
 #-------------------------------------------------------------------------------
 
@@ -56,67 +56,6 @@ fi
 if [ -d /usr/lib/yasp ]; then
     . /usr/lib/yasp/*
 fi
-
-create()
-{
-#-------------------------------------------------------------------------------
-# prepare directories
-#-------------------------------------------------------------------------------
-for i in $distro
-do
-  if [ ! -d "$yasp_dir"/base/"$i" ]; then
-      mkdir -p "$yasp_dir"/base/"$i"
-  fi
-  if [ ! -d "$yasp_dir"/aptcache/"$i"/var/cache/apt/archives ]; then
-      mkdir -p "$yasp_dir"/aptcache/"$i"/var/cache/apt/archives
-  fi
-done
-
-if [ ! -d "$yasp_dir"/aptcache/host/var/cache/apt ]; then
-   mkdir -p "$yasp_dir"/aptcache/host/var/cache/apt
-fi
-
-if [ ! -f "$yasp_dir"/aptcache/host/var/cache/apt/archives ]; then
-    (cd "$yasp_dir"/aptcache/host/var/cache/apt; ln -s /var/cache/apt/archives archives)
-fi
-
-for dir in working mountdir failed
-do
-  if [ ! -d "$yasp_dir"/"$dir" ]; then
-      mkdir "$yasp_dir"/"$dir"
-  fi
-done
-
-#-------------------------------------------------------------------------------
-# create base cow: use files if it exists, -P = base.tgz, -C = base.cow
-#-------------------------------------------------------------------------------
-
-if [ -d "$basecow" -o "$2" = -C ]; then
-  basedistro=`cat /var/cache/pbuilder/base.cow/etc/apt/sources.list | head -n1 |cut -d' ' -f3`
-  if [ ! -d "$yasp_dir"/base/"$basedistro"/etc ]; then
-      cp -arp "$basecow"/* "$yasp_dir"/base/"$basedistro"
-  fi
-elif [ -f "$basetgz" -o "$2" = -P ]; then
-  basedistro=`cat `tar xvf "$basetgz" etc/apt/sources.list` |head -n1 |cut -d' ' -f3`
-  if [ ! -d "$yasp_dir"/base/"$basedistro"/etc ]; then
-      tar -C "$yasp_dir"/base/"$basedistro" -xf "$basetgz" 
-  fi
-fi
-}
-
-base_update()
-{
-for i in $distro
-do
-  if [ -d "$yasp_dir"/base/"$i"/etc ]; then
-      chroot "$yasp_dir"/base/"$i" apt-get -qq update
-      chroot "$yasp_dir"/base/"$i" apt-get -dyqq upgrade
-  else
-      debootstrap "$i" "$yasp_dir"/base/"$i" "$mirror"
-  fi
-done
-}
-
 
 case "$1" in
     init)
@@ -262,6 +201,7 @@ done
       test        : specify changes file and exec test
                     (install/uninstall/remove/purge/uninstall)
       help        : show this message
+
 END
 
     ;;

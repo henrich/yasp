@@ -1,0 +1,12 @@
+base_update()
+{
+for i in $distro
+do
+  if [ -d "$yasp_dir"/base/"$i"/etc ]; then
+      chroot "$yasp_dir"/base/"$i" apt-get -qq update
+      chroot "$yasp_dir"/base/"$i" apt-get -dyqq upgrade
+  else
+      debootstrap "$i" "$yasp_dir"/base/"$i" "$mirror"
+  fi
+done
+}
