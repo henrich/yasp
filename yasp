@@ -1,4 +1,4 @@
-#!/bin/bash -xv
+#!/bin/bash
 #
 # yasp - Yet Another Simple/Speedy Piuparts
 #
@@ -161,6 +161,7 @@ do
               echo "caching .deb files for $p..."
               chroot "$tmpmountdir" apt-get -dyqq install "$p"
 	  else
+	      # if there's no package in repo, not exec upgrade path
 	      not_upgrade="yes"
           fi
           umount "$tmpmountdir" && rmdir "$tmpmountdir"
@@ -190,7 +191,6 @@ do
 	do
 	  chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/"$pkg" >/dev/null 2>&1
 	done
-	echo "(Please ignore debconf warnings)"
 	set -e
 	chroot "$tmpmountdir" apt-get -fyqq install >/dev/null 2>&1
 
@@ -205,7 +205,6 @@ do
 	diff -u /tmp/"$lst_before" /tmp/"$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > /tmp/"$lst_diff"
 	cp /tmp/"$lst_diff" "$tmpmountdir"/tmp
 	echo -e "${start_yellow}REMOVE${end_color}: remove package(s)..."
-	echo "(Please ignore debconf warnings)"
 	chroot "$tmpmountdir" dpkg --remove `cat /tmp/$lst_diff` > /dev/null 2>&1
 	mount -o remount,del:"$workdir_rm" "$tmpmountdir"
 
@@ -220,7 +219,6 @@ do
 	diff -u /tmp/"$lst_before" /tmp/"$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > /tmp/"$lst_diff"
         cp /tmp/"$lst_diff" "$tmpmountdir"/tmp; rm /tmp/"$lst_after"
 	echo -e "${start_yellow}PURGE${end_color}: purge package(s)..."
-	echo "(Please ignore debconf warnings)"
 	chroot "$tmpmountdir" dpkg --purge `cat /tmp/$lst_diff` > /dev/null 2>&1
 	chroot "$tmpmountdir" rm /tmp/$lst_diff
 	mount -o remount,del:"$workdir_purge" "$tmpmountdir"
@@ -229,22 +227,25 @@ do
 	# upgrade
         #-------------------------------------------------------------------------------
 	if [ -z $not_upgrade ]; then
-	    chroot "$tmpmountdir" rm /tmp/$lst_diff
-	    mount -o remount,del:"$workdir" "$tmpmountdir"
-	    
 	    workdir_upgrade=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
 	    mount -o remount,append:"$workdir_upgrade" "$tmpmountdir"
             cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/
 	    echo -e "${start_yellow}UPGRADE${end_color}: upgrade package(s)..."
 	    echo "(Please ignore debconf warnings)"
-	    chroot "$tmpmountdir" apt-get install -yfqq $packagelist
-	    chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/*.deb >/dev/null 2>&1
+	    chroot "$tmpmountdir" apt-get install -yfqq "$package" >/dev/null 2>&1
+	    for pkg in $packagelist
+	    do
+	      chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/"$pkg" >/dev/null 2>&1
+	    done
 	    mount -o remount,del:"$workdir_upgrade" "$tmpmountdir"
 	fi
 
 	# throw chroot away...
-	rm -rf "$workdir" "$workdir_rm" 
-	umount "$tmpmountdir"/proc && umount "$tmpmountdir"/dev/pts && umount -f "$tmpmountdir"
+	for mountd in "$tmpmountdir"/proc "$tmpmountdir"/dev/pts "$tmpmountdir"
+	do 
+	  umount $mountd
+	done
+	rm -rf "$workdir" "$workdir_rm"
 done
     echo -e "${start_green}PASS: installation test${end_color}"
     ;;
