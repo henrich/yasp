@@ -14,5 +14,4 @@ Depends: ${misc:Depends}, aufs-tools
 Description: Yet Another Simple/Speedy piuparts
  yasp is yet another implementation for testing Debian package installations
  (install, remove, purge and upgrade). It uses COW function and faster than
- piuparts (but limited functions since it's under development stage, just 
- implemented install/remove/purge features).
+ piuparts (but its functions are limited since it's under development stage).
