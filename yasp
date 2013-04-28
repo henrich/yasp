@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -xv
 #
 # yasp - Yet Another Simple/Speedy Piuparts
 #
@@ -159,12 +159,15 @@ do
 	  if [ ! "$pkgcheck" = "E: No packages found" ]; then
               echo "caching .deb files for $p..."
               chroot "$tmpmountdir" apt-get -dyqq install "$p"
+	  else
+	      not_upgrade="yes"
           fi
           umount "$tmpmountdir" && rmdir "$tmpmountdir"
       done
     fi
 done
 
+# install, uninstall, purge and upgrade test
 
 packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq|tr '\n' ' '`
 for i in $distro
@@ -183,7 +186,7 @@ do
 	set +e
 	echo -e "${start_yellow}INSTALL${end_color}: install package(s)..."
 	chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/*.deb >/dev/null 2>&1
-	chroot "$tmpmountdir" rm "$yasp_dir"/aptcache/"$i"/*.deb
+#	chroot "$tmpmountdir" rm "$yasp_dir"/aptcache/"$i"/*.deb
 	echo "(Please ignore debconf warnings)"
 	set -e
 	chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
@@ -212,10 +215,25 @@ do
 	echo -e "${start_yellow}PURGE${end_color}: purge package(s)..."
 	echo "(Please ignore debconf warnings)"
 	chroot "$tmpmountdir" dpkg --purge `cat /tmp/$lst_diff` > /dev/null
+	chroot "$tmpmountdir" rm /tmp/$lst_diff
 	mount -o remount,del:"$workdir_purge" "$tmpmountdir"
 
+	# upgrade
+	if [ ! -z "$not_upgrade" ]; then
+	    chroot "$tmpmountdir" rm /tmp/$lst_diff
+	    mount -o remount,del:"$workdir" "$tmpmountdir"
+	    
+	    workdir_upgrade=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
+	    mount -o remount,append:"$workdir_upgrade" "$tmpmountdir"
+            cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/
+	    echo -e "${start_yellow}UPGRADE${end_color}: upgrade package(s)..."
+	    echo "(Please ignore debconf warnings)"
+	    chroot "$tmpmountdir" apt-get install -yfqq $packagelist
+	    chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/*.deb >/dev/null 2>&1
+	    mount -o remount,del:"$workdir_upgrade" "$tmpmountdir"
+	fi
+
 	# throw chroot away...
-	chroot "$tmpmountdir" rm /tmp/$lst_diff
 	rm -rf "$workdir" "$workdir_rm" 
 	umount "$tmpmountdir"/proc && umount "$tmpmountdir"/dev/pts && umount -f "$tmpmountdir"
 done
