@@ -1,0 +1,60 @@
+yasp(1)
+===========
+
+NAME
+----
+yasp - yet another piuparts : test .deb package installation
+
+SYNOPSIS
+--------
+*yasp* ['init'] ['-CP'] ['test' [_changes_file_]]
+
+DESCRIPTION
+-----------
+*yasp* tests that Debian packages handle installation/upgrading/removal/purging correctly, as same as *piuparts*. However, *yasp* uses *COW* (Copy On Write) method to make it faster than *piuparts*.
+
+By default, runs only 1 test:
+
+. A simple install-remove-purge-upgrade test within one Debian distribution (unstable by default). It sets up the chroot with the desired distribution, then installs, removes, purges and upgrades the packages, and reports problems if it exists.
+
+Command line arguments are the paths to changes file (e.g., _yasp_20130427_amd64.changes_).
+
+*yasp* needs to be run as root since it needs privilege to mount filesystem.
+
+OPTIONS
+-------
+Options must come before the other command line arguments.
+
+*init*::
+  Create initial chroot enviroment with debootstrap. You don't need to run it twice or so.
+
+*-C*::
+  Use it with *init* option, uses cowbuilder's base.cow files for the initial chroot, instead of building a new one with debootstrap.
+
+*-P*'::
+  Use it with *init* option, uses pbuilder's base.tgz tarball as the contents of the initial chroot, instead of building a new one with debootstrap.
+
+*test*::
+  test packages, by specifying *.changes file
+
+EXAMPLES
+--------
+Just simply use *test* option as below.
+
+----
+# yasp test ../foo_1.0-2_amd64.changes
+----
+
+SEE ALSO
+--------
+*piuparts*(1), *debootstrap*(8)
+
+AUTHOR
+------
+Hideki Yamane <henrich@debian.org>
+
+DATE
+----
+2013-04-27
+
+// vim: set filetype=asciidoc:
