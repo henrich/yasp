@@ -6,4 +6,4 @@ Source: https://github.com/henrich/yasp
 Files: *
 Copyright: 2013, Hideki Yamane <henrich@debian.org>
 License: GPL-3+
-
+ see /usr/share/common-licenses/GPL-3

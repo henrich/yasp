@@ -37,6 +37,8 @@ if [ -z `grep CONFIG_AUFS_FS $config` ]; then
      exit 1
 fi
 
+ARCH=`dpkg-architecture -qDEB_HOST_ARCH`
+
 #-------------------------------------------------------------------------------
 # read configuration
 #-------------------------------------------------------------------------------
@@ -185,11 +187,13 @@ do
 	chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_before"
 	set +e
 	echo -e "${start_yellow}INSTALL${end_color}: install package(s)..."
-	chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/*.deb >/dev/null 2>&1
-#	chroot "$tmpmountdir" rm "$yasp_dir"/aptcache/"$i"/*.deb
+	for pkg in $packagelist
+	do
+	  chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/"$pkg" >/dev/null 2>&1
+	done
 	echo "(Please ignore debconf warnings)"
 	set -e
-	chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
+	chroot "$tmpmountdir" apt-get -fyqq install >/dev/null 2>&1
 
 	# remove
 	workdir_rm=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
@@ -197,11 +201,12 @@ do
 	lst_after=`mktemp ${srcpackage}XXXXX`
 	chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_after"
 	lst_diff=`mktemp ${srcpackage}XXXXX`
-	diff -u /tmp/"$lst_before" /tmp/"$lst_after" | awk '/^+[a-z]/ { gsub (/^+/," ", $1) ; gsub (/:amd64/,"", $1); print $1 }' > /tmp/"$lst_diff"
-	cp /tmp/"$lst_diff" "$tmpmountdir"/tmp; rm /tmp/"$lst_after"
+	diff -u /tmp/"$lst_before" /tmp/"$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > /tmp/"$lst_diff"
+	cp /tmp/"$lst_diff" "$tmpmountdir"/tmp
+#       	rm /tmp/"$lst_before" /tmp/"$lst_after"
 	echo -e "${start_yellow}REMOVE${end_color}: remove package(s)..."
 	echo "(Please ignore debconf warnings)"
-	chroot "$tmpmountdir" dpkg --remove `cat /tmp/$lst_diff` > /dev/null
+	chroot "$tmpmountdir" dpkg --remove `cat /tmp/$lst_diff` > /dev/null 2>&1
 	mount -o remount,del:"$workdir_rm" "$tmpmountdir"
 
 	# purge
@@ -210,11 +215,11 @@ do
 	lst_after=`mktemp ${srcpackage}XXXXX`
         chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_after"
         lst_diff=`mktemp ${srcpackage}XXXXX`
-        diff -u /tmp/"$lst_before" /tmp/"$lst_after" | awk '/^+[a-z]/ { gsub (/^+/," ", $1) ; gsub (/:amd64/,"", $1); print $1 }' > /tmp/"$lst_diff"
+	diff -u /tmp/"$lst_before" /tmp/"$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > /tmp/"$lst_diff"
         cp /tmp/"$lst_diff" "$tmpmountdir"/tmp; rm /tmp/"$lst_after"
 	echo -e "${start_yellow}PURGE${end_color}: purge package(s)..."
 	echo "(Please ignore debconf warnings)"
-	chroot "$tmpmountdir" dpkg --purge `cat /tmp/$lst_diff` > /dev/null
+	chroot "$tmpmountdir" dpkg --purge `cat /tmp/$lst_diff` > /dev/null 2>&1
 	chroot "$tmpmountdir" rm /tmp/$lst_diff
 	mount -o remount,del:"$workdir_purge" "$tmpmountdir"
 
