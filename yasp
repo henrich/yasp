@@ -133,8 +133,9 @@ case "$1" in
 # get package name from changes file, e.g. hail_0.8+0.11.37389dbf9b-1_amd64.changes
 #FIXME: now yasp can only accept .changes file, however probably user want to test .debs
 
+pwd=`pwd`
 packagefile=`echo $2|grep .changes$`
-srcpackage=`echo $2|cut -d'_' -f1`
+srcpackage=`echo $2|sed -e s%"$pwd"%% -e %/%%|cut -d'_' -f1`
 
 if [ -z "$packagefile" ]; then
     echo "Please specify .changes file"
@@ -194,9 +195,9 @@ do
 	set -e
 	chroot "$tmpmountdir" apt-get -fyqq install >/dev/null 2>&1
 
-        #-------------------------------------------------------------------------------
+        #-----------------------------------------------------------------------
 	# remove
-        #-------------------------------------------------------------------------------
+        #-----------------------------------------------------------------------
 	workdir_rm=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
 	mount -o remount,append:"$workdir_rm" "$tmpmountdir"
 	lst_after=`mktemp ${srcpackage}XXXXX`
@@ -208,9 +209,9 @@ do
 	chroot "$tmpmountdir" dpkg --remove `cat /tmp/$lst_diff` > /dev/null 2>&1
 	mount -o remount,del:"$workdir_rm" "$tmpmountdir"
 
-        #-------------------------------------------------------------------------------
+        #-----------------------------------------------------------------------
 	# purge
-        #-------------------------------------------------------------------------------
+        #-----------------------------------------------------------------------
 	workdir_purge=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
 	mount -o remount,append:"$workdir_purge" "$tmpmountdir"
 	lst_after=`mktemp ${srcpackage}XXXXX`
@@ -223,15 +224,15 @@ do
 	chroot "$tmpmountdir" rm /tmp/$lst_diff
 	mount -o remount,del:"$workdir_purge" "$tmpmountdir"
 
-        #-------------------------------------------------------------------------------
+        #-----------------------------------------------------------------------
 	# upgrade
-        #-------------------------------------------------------------------------------
+        #-----------------------------------------------------------------------
 	if [ -z $not_upgrade ]; then
 	    workdir_upgrade=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
 	    mount -o remount,append:"$workdir_upgrade" "$tmpmountdir"
             cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/
 	    echo -e "${start_yellow}UPGRADE${end_color}: upgrade package(s)..."
-	    chroot "$tmpmountdir" apt-get install -yfqq "$package" >/dev/null 2>&1
+	    chroot "$tmpmountdir" apt-get install -yfqq `echo "$package" |sed ':loop; N; $!b loop; ;s/\n/\ /g'` >/dev/null 2>&1
 	    for pkg in $packagelist
 	    do
 	      chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/"$pkg" >/dev/null 2>&1
@@ -240,13 +241,14 @@ do
 	fi
 
 	# throw chroot away...
-	for mountd in "$tmpmountdir"/proc "$tmpmountdir"/dev/pts "$tmpmountdir"
+	for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"
 	do 
 	  umount $mountd
 	done
 done
     rm -rf "$workdir" "$workdir_rm"
-    echo -e "${start_green}PASS: installation test${end_color}"
+    echo -e "${start_green}PASS: install/remove/purge/upgrade test${end_color}"
+    echo -e "${start_red}`mount|grep aufs`${end_color}"
     ;;
 #-------------------------------------------------------------------------------
 
