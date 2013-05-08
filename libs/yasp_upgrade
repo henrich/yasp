@@ -9,9 +9,11 @@ yasp_upgrade()
 
   if [ ! ${distro} = sid ]; then
 	  echo -e "${start_yellow}Target is not unstable (sid) but ${distro}. Skipping...${end_color}"
+	  exit
   fi
   if [ ! -z $not_upgrade ]; then
 	  echo -e "${start_yellow}Specified to skip UPGRADE test. Skipping...${end_color}"
+	  exit
   fi
 
   if [ `dpkg --compare-versions ${pkg_version} -lt ${repo_version}` ]; then
@@ -31,5 +33,6 @@ yasp_upgrade()
   else
       echo -e "Package version ${repo_version} in ${distro} is NOT lower version than test one."
       echo -e "${start_yellow}Skipping UPGRADE test...${end_color}"
+      exit
   fi
 }
