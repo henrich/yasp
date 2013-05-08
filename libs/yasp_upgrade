@@ -16,7 +16,7 @@ yasp_upgrade()
 	  exit
   fi
 
-  if [ `dpkg --compare-versions ${pkg_version} -lt ${repo_version}` ]; then
+  if [ `dpkg --compare-versions ${pkg_version} gt-nl ${repo_version}` ]; then
       workdir_upgrade=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_upgrade_"$i"_"$exec_date" ${srcpackage}XXXXX`
       mount -o remount,ins:0:"$workdir_upgrade" "$tmpmountdir" > /dev/null
       cp -f $packagelist "$tmpmountdir"/tmp/
