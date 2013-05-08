@@ -5,5 +5,7 @@ yasp_chroot_throw()
 {
 trap 'for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"; \
       do umount $mountd; done; \
-      echo -e "${start_red}`mount|grep aufs`${end_color}"' 0 
+      for directory in "$workdir_install" "$workdir_remove" "$workdir_purge" "$workdir_upgrade"; \
+      do if [ -d $directory ]; then rm -rf $directory; fi; done; \
+      echo -e "${start_red}`mount|grep aufs`${end_color}"' EXIT
 }
