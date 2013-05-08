@@ -30,5 +30,5 @@ yasp_install()
   chroot "$tmpmountdir" dpkg --get-selections > "$lst_after"
   # once read-only already installed mount
   mount -o remount,mod:"$workdir_install"=ro "$tmpmountdir" > /dev/null
-  echo -e "${start_green}Done!${end_color}"
+  echo -e "${start_green}Done${end_color}"
 }

@@ -7,7 +7,14 @@ yasp_upgrade()
   fi
   yasp_chroot_throw
 
-  if [ -z $not_upgrade ]; then
+  if [ ! ${distro} = sid ]; then
+	  echo -e "${start_yellow}Target is not unstable (sid) but ${distro}. Skipping...${end_color}"
+  fi
+  if [ ! -z $not_upgrade ]; then
+	  echo -e "${start_yellow}Specified to skip UPGRADE test. Skipping...${end_color}"
+  fi
+
+  if [ `dpkg --compare-versions ${pkg_version} -lt ${repo_version}` ]; then
       workdir_upgrade=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_upgrade_"$i"_"$exec_date" ${srcpackage}XXXXX`
       mount -o remount,ins:0:"$workdir_upgrade" "$tmpmountdir" > /dev/null
       cp -f $packagelist "$tmpmountdir"/tmp/
@@ -20,5 +27,9 @@ yasp_upgrade()
       set -e
       chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
       mount -o remount,del:"$workdir_upgrade" "$tmpmountdir"
+      echo -e "${start_green}Done${end_color}"
+  else
+      echo -e "Package version ${repo_version} in ${distro} is NOT lower version than test one."
+      echo -e "${start_yellow}Skipping UPGRADE test...${end_color}"
   fi
 }

@@ -75,24 +75,26 @@ case "$1" in
     #FIXME: now yasp can only accept .changes file, however probably user want to test .debs
 
     packagefile=`echo $2|grep .changes$`
-    srcpackage=`basename $2|cut -d'_' -f1`
 
     if [ -z "$packagefile" ]; then
         echo "Please specify .changes file"
         exit 1
     else
         package=`cat $packagefile | cut -d' ' -f4|grep .deb$|sort|uniq|cut -d'_' -f1`
+	pkg_version=`cat $packagefile | grep "^Version: " | cut -d' ' -f2`
+        packagelist=`cat $packagefile |cut -d' ' -f4|grep .deb$|sort|uniq|tr '\n' ' '`
+        srcpackage=`basename $2|cut -d'_' -f1`
     fi
 
     # cache *.deb to aptcache
     yasp_cache
 
     # install, uninstall, purge and upgrade test
-    packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq|tr '\n' ' '`
     dir=`dirname $2`
     for i in $distro
     do
-	yasp_install; yasp_remove; yasp_purge; yasp_upgrade
+	repo_version=`rmadison ${srcpackage} | grep ${distro} | cut -d'|' -f2 |sed -e s/\ //g`
+	yasp_install && yasp_remove && yasp_purge && yasp_install_dell && yasp_upgrade
     done
     trap 'for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"; \
           do umount $mountd; done; \

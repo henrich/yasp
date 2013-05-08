@@ -1,0 +1,11 @@
+#!/bin/sh
+
+yasp_install_del()
+{
+  if [ /usr/lib/yasp/yasp_chroot_throw ]; then
+          . /usr/lib/yasp/yasp_chroot_throw
+  fi
+  yasp_chroot_throw
+
+  mount -o remount,del:"$workdir_install" "$tmpmountdir" > /dev/null
+}
