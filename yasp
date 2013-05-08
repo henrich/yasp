@@ -81,7 +81,7 @@ case "$1" in
         exit 1
     else
         package=`cat $packagefile | cut -d' ' -f4|grep .deb$|sort|uniq|cut -d'_' -f1`
-	pkg_version=`cat $packagefile | grep "^Version: " | cut -d' ' -f2`
+	pkg_version=`cat $packagefile | grep ^"Version: [0-9]." | cut -d' ' -f2`
         packagelist=`cat $packagefile |cut -d' ' -f4|grep .deb$|sort|uniq|tr '\n' ' '`
         srcpackage=`basename $2|cut -d'_' -f1`
     fi
