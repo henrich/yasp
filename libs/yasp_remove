@@ -2,14 +2,26 @@
 
 yasp_remove()
 {
-  workdir_rm=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
-  mount -o remount,append:"$workdir_rm" "$tmpmountdir"
-  lst_after=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
-  chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_after"
-  lst_diff=`mktemp ${srcpackage}XXXXX`
-  diff -u /tmp/"$lst_before" /tmp/"$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > /tmp/"$lst_diff"
-  cp /tmp/"$lst_diff" "$tmpmountdir"/tmp
-  echo -e "${start_yellow}REMOVE${end_color}: remove package(s)..."
-  chroot "$tmpmountdir" dpkg --remove `cat /tmp/$lst_diff` > /dev/null 2>&1
-  mount -o remount,del:"$workdir_rm" "$tmpmountdir"
+  if [ /usr/lib/yasp/yasp_chroot_throw ]; then
+          . /usr/lib/yasp/yasp_chroot_throw
+  fi
+  yasp_chroot_throw
+
+  workdir_remove=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_remove_"$i"_"$exec_date" ${srcpackage}XXXXX`
+  mount -o remount,ins:0:"$workdir_remove" "$tmpmountdir" > /dev/null
+
+  lst_diff=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
+  diff -u "$lst_before" "$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > "$lst_diff"
+  if [  -s "$lst_diff" ]; then
+	cp "$lst_diff" "$tmpmountdir"/tmp
+  	echo -e "${start_yellow}REMOVE${end_color}: remove package(s)..."
+  	#chroot "$tmpmountdir" dpkg --remove `cat $lst_diff` > /dev/null
+  	chroot "$tmpmountdir" apt-get -yqq remove `cat $lst_diff` > /dev/null
+  	mount -o remount,del:"$workdir_remove" "$tmpmountdir" > /dev/null
+	echo -e "${start_green}Done${end_color}"
+  else
+	echo "cannot generate package list... aborting."
+	# if you would specify exit 1, it returns 0
+	exit
+  fi
 }

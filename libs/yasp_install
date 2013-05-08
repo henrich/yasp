@@ -2,14 +2,33 @@
 
 yasp_install()
 {
+  if [ /usr/lib/yasp/yasp_chroot_throw ]; then
+	  . /usr/lib/yasp/yasp_chroot_throw
+  fi
+  yasp_chroot_throw
+
+  workdir_install=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_install_"$i"_"$exec_date" ${srcpackage}XXXXX`
+  tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix=_"$i"_"$exec_date" ${srcpackage}XXXXX`
+  mount -t aufs -o br="$workdir_install":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
+  mount --bind /proc "$tmpmountdir"/proc
+  mount --bind /dev/pts "$tmpmountdir"/dev/pts
+  (cd "$dir"; cp -f $packagelist "$tmpmountdir"/tmp/)
+
   lst_before=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
-  chroot "$tmpmountdir" dpkg --get-selections > /tmp/"$lst_before"
-  set +e
+  chroot "$tmpmountdir" dpkg --get-selections > "$lst_before"
   echo -e "${start_yellow}INSTALL${end_color}: install package(s)..."
-  for pkg in $packagelist
+
+  set +e
+  for install_package in $packagelist
   do
-    chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/"$pkg" >/dev/null 2>&1
+    chroot "$tmpmountdir" dpkg -i /tmp/"$install_package" > /dev/null
   done
   set -e
-  chroot "$tmpmountdir" apt-get -fyqq install >/dev/null 2>&1
+
+  chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
+  lst_after=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
+  chroot "$tmpmountdir" dpkg --get-selections > "$lst_after"
+  # once read-only already installed mount
+  mount -o remount,mod:"$workdir_install"=ro "$tmpmountdir" > /dev/null
+  echo -e "${start_green}Done!${end_color}"
 }

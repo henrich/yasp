@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# throw chroot away... catch exit signal as 0 (only, if you would specify 1 or so)
+yasp_chroot_throw()
+{
+trap 'for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"; \
+      do umount $mountd; done; \
+      echo -e "${start_red}`mount|grep aufs`${end_color}"' 0 
+}

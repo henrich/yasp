@@ -2,16 +2,23 @@
 
 yasp_upgrade()
 {
+  if [ /usr/lib/yasp/yasp_chroot_throw ]; then
+          . /usr/lib/yasp/yasp_chroot_throw
+  fi
+  yasp_chroot_throw
+
   if [ -z $not_upgrade ]; then
-      workdir_upgrade=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$srcpackage"_"$i"_"$exec_date" yaspXXXXX`
-      mount -o remount,append:"$workdir_upgrade" "$tmpmountdir"
-      cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/
+      workdir_upgrade=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_upgrade_"$i"_"$exec_date" ${srcpackage}XXXXX`
+      mount -o remount,ins:0:"$workdir_upgrade" "$tmpmountdir" > /dev/null
+      cp -f $packagelist "$tmpmountdir"/tmp/
       echo -e "${start_yellow}UPGRADE${end_color}: upgrade package(s)..."
-      chroot "$tmpmountdir" apt-get install -yfqq `echo "$package" |sed ':loop; N; $!b loop; ;s/\n/\ /g'` >/dev/null 2>&1
+      set +e
       for pkg in $packagelist
       do
-        chroot "$tmpmountdir" dpkg -i "$yasp_dir"/aptcache/"$i"/"$pkg" >/dev/null 2>&1
+        chroot "$tmpmountdir" dpkg -i /tmp/"$pkg"
       done
+      set -e
+      chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
       mount -o remount,del:"$workdir_upgrade" "$tmpmountdir"
   fi
 }

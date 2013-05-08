@@ -1,4 +1,4 @@
-#!/bin/bash -xv
+#!/bin/bash
 #
 # yasp - Yet Another Simple/Speedy Piuparts
 #
@@ -74,7 +74,6 @@ case "$1" in
     # get package name from changes file, e.g. hail_0.8+0.11.37389dbf9b-1_amd64.changes
     #FIXME: now yasp can only accept .changes file, however probably user want to test .debs
 
-    pwd=`pwd`
     packagefile=`echo $2|grep .changes$`
     srcpackage=`basename $2|cut -d'_' -f1`
 
@@ -90,24 +89,16 @@ case "$1" in
 
     # install, uninstall, purge and upgrade test
     packagelist=`cat "$packagefile" |cut -d' ' -f4|grep .deb$|sort|uniq|tr '\n' ' '`
+    dir=`dirname $2`
     for i in $distro
     do
-	workdir=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_"$i"_"$exec_date" ${srcpackage}XXXXX`
-        tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix=_"$i"_"$exec_date" ${srcpackage}XXXXX`
-        mount -t aufs -o br="$workdir":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
-	mount --bind /proc "$tmpmountdir"/proc
-	mount --bind /dev/pts "$tmpmountdir"/dev/pts
-	chroot "$tmpmountdir" mkdir -p "$yasp_dir"/aptcache/"$i"
-	(cd `dirname $2`; cp -f $packagelist "$tmpmountdir"/"$yasp_dir"/aptcache/"$i"/)
-
-	# throw chroot away...
-	trap 'for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"; do umount $mountd; done; \
-		echo -e "${start_red}`mount|grep aufs`${end_color}"' 1 2 3 15
 	yasp_install; yasp_remove; yasp_purge; yasp_upgrade
-        trap 'for directory in "$workdir" "$workdir_rm" "$workdir_purge" "$workdir_upgrade"; \
-	      do if [ -d $directory ]; then rm -rf $directory; done; \
-	      echo -e "${start_red}`mount|grep aufs`${end_color}"' EXIT
     done
+    trap 'for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"; \
+          do umount $mountd; done; \
+	  echo -e "${start_red}`mount|grep aufs`${end_color}"; \
+	  for directory in "$workdir_install" "$workdir_remove" "$workdir_purge" "$workdir_upgrade"; \
+          do if [ -d $directory ]; then rm -rf $directory; fi; done' EXIT
     echo -e "${start_green}PASS: install/remove/purge/upgrade test${end_color}"
     ;;
 
@@ -126,4 +117,3 @@ END
 
     ;;
 esac
-
