@@ -1,6 +1,7 @@
-yasp (20130418) UNRELEASED; urgency=low
+yasp (20130509) experimental; urgency=low
 
-  * not yet work...
+  * Initial release
+    - it can check normal (sane) package
+    - for insane package for error handling, not yet implemented...
 
- -- Hideki Yamane <henrich@debian.org>  Wed, 17 Apr 2013 09:37:56 +0900
-
+ -- Hideki Yamane <henrich@debian.org>  Thu, 09 May 2013 13:26:12 +0900
