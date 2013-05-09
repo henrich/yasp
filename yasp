@@ -93,7 +93,7 @@ case "$1" in
     dir=`dirname $2`
     for i in $distro
     do
-	repo_version=`rmadison ${srcpackage} | grep ${distro} | cut -d'|' -f2 |sed -e s/\ //g`
+	repo_version=`rmadison ${srcpackage} | grep ${i} | cut -d'|' -f2 |sed -e s/\ //g`
 	yasp_install && yasp_remove && yasp_purge && yasp_install_del && yasp_upgrade
     done
     trap 'for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"; \
