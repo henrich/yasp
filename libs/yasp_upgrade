@@ -31,7 +31,7 @@ yasp_upgrade()
       mount -o remount,del:"$workdir_upgrade" "$tmpmountdir"
       echo -e "${start_green}Done${end_color}"
   else
-      echo -e "Package version ${repo_version} (in ${distro})"
+      echo -e "Package version ${repo_version} (in ${i})"
       echo -e "Package vesrion ${pkg_version} (now you test)"
       echo -e "${pkg_version} =< ${repo_version}"
       echo -e "${start_yellow}Skipping UPGRADE test...${end_color}"
