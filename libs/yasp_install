@@ -28,6 +28,10 @@ yasp_install()
   chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
   debsums --root "$tmpmountdir" -ac
 
+  set +e
+  lsof +D "$tmpmountdir"
+  set -e
+
   lst_after=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
   chroot "$tmpmountdir" dpkg --get-selections > "$lst_after"
   # once read-only already installed mount
