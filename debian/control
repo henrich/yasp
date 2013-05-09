@@ -10,7 +10,7 @@ Vcs-Browser: https://github.com/henrich/yasp
 
 Package: yasp
 Architecture: all
-Depends: ${misc:Depends}, aufs-tools, devscripts
+Depends: ${misc:Depends}, aufs-tools, devscripts, debsums
 Description: Yet Another Simple/Speedy piuparts
  yasp is yet another implementation for testing Debian package installations
  (install, remove, purge and upgrade). It uses COW function and faster than
