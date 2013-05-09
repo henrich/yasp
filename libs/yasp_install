@@ -21,7 +21,7 @@ yasp_install()
   set +e
   for install_package in $packagelist
   do
-    chroot "$tmpmountdir" dpkg -i /tmp/"$install_package" > /dev/null
+    chroot "$tmpmountdir" dpkg -i /tmp/"$install_package" > /dev/null 2>&1
   done
   set -e
 
