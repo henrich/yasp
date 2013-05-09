@@ -7,7 +7,7 @@ yasp_upgrade()
   fi
   yasp_chroot_throw
 
-  if [ ! ${distro} = sid ]; then
+  if [ ! ${i} = sid ]; then
 	  echo -e "${start_yellow}Target is not unstable (sid) but ${distro}. Skipping...${end_color}"
 	  exit
   fi
