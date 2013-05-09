@@ -35,7 +35,5 @@ yasp_upgrade()
       echo -e "Package vesrion ${pkg_version} (now you test)"
       echo -e "${pkg_version} =< ${repo_version}"
       echo -e "${start_yellow}Skipping UPGRADE test...${end_color}"
-      
-      exit
   fi
 }
