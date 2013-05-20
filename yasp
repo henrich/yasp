@@ -91,16 +91,12 @@ case "$1" in
 
     # install, uninstall, purge and upgrade test
     dir=`dirname $2`
+    trap 'yasp_chroot_throw' 1 2 3 5 15
     for i in $distro
     do
 	repo_version=`rmadison ${srcpackage} | grep ${i} | cut -d'|' -f2 |sed -e s/\ //g`
-	yasp_install && yasp_remove && yasp_purge && yasp_install_del && yasp_upgrade
+	yasp_install && yasp_remove && yasp_purge && yasp_install_del && yasp_upgrade && yasp_chroot_throw
     done
-    trap 'for mountd in "$tmpmountdir"/dev/pts "$tmpmountdir"/proc "$tmpmountdir"; \
-          do umount $mountd; done; \
-	  echo -e "${start_red}`mount|grep aufs`${end_color}"; \
-	  for directory in "$workdir_install" "$workdir_remove" "$workdir_purge" "$workdir_upgrade"; \
-          do if [ -d $directory ]; then rm -rf $directory; fi; done' EXIT
     echo -e "${start_green}PASS: install/remove/purge/upgrade test${end_color}"
     ;;
 

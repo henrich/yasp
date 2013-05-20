@@ -2,11 +2,6 @@
 
 yasp_upgrade()
 {
-  if [ /usr/lib/yasp/yasp_chroot_throw ]; then
-          . /usr/lib/yasp/yasp_chroot_throw
-  fi
-  yasp_chroot_throw
-
   if [ ! ${i} = sid ]; then
 	  echo -e "${start_yellow}Target is not unstable (sid) but ${distro}. Skipping...${end_color}"
 	  exit

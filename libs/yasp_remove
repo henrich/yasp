@@ -2,15 +2,10 @@
 
 yasp_remove()
 {
-  if [ /usr/lib/yasp/yasp_chroot_throw ]; then
-          . /usr/lib/yasp/yasp_chroot_throw
-  fi
-  yasp_chroot_throw
-
   workdir_remove=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_remove_"$i"_"$exec_date" ${srcpackage}XXXXX`
   mount -o remount,ins:0:"$workdir_remove" "$tmpmountdir" > /dev/null
 
-  lst_diff=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
+  lst_diff=`mktemp --tmpdir=/tmp ${i}-${srcpackage}XXXXX`
   diff -u "$lst_before" "$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > "$lst_diff"
   if [  -s "$lst_diff" ]; then
 	cp "$lst_diff" "$tmpmountdir"/tmp

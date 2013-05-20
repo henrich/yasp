@@ -2,11 +2,6 @@
 
 yasp_install()
 {
-  if [ /usr/lib/yasp/yasp_chroot_throw ]; then
-	  . /usr/lib/yasp/yasp_chroot_throw
-  fi
-  yasp_chroot_throw
-
   workdir_install=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_install_"$i"_"$exec_date" ${srcpackage}XXXXX`
   tmpmountdir=`mktemp -d --tmpdir="$yasp_dir"/mountdir --suffix=_"$i"_"$exec_date" ${srcpackage}XXXXX`
   mount -t aufs -o br="$workdir_install":"$yasp_dir"/aptcache/"$i"=ro:"$yasp_dir"/base/"$i"=ro:"$yasp_dir"/aptcache/host=ro none "$tmpmountdir"
@@ -14,7 +9,7 @@ yasp_install()
   mount --bind /dev/pts "$tmpmountdir"/dev/pts
   (cd "$dir"; cp -f $packagelist "$tmpmountdir"/tmp/)
 
-  lst_before=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
+  lst_before=`mktemp --tmpdir=/tmp ${i}-${srcpackage}XXXXX`
   chroot "$tmpmountdir" dpkg --get-selections > "$lst_before"
   echo -e "${start_yellow}INSTALL${end_color}: install package(s)..."
 
@@ -32,7 +27,7 @@ yasp_install()
   lsof +D "$tmpmountdir"
   set -e
 
-  lst_after=`mktemp --tmpdir=/tmp ${srcpackage}XXXXX`
+  lst_after=`mktemp --tmpdir=/tmp ${i}-${srcpackage}XXXXX`
   chroot "$tmpmountdir" dpkg --get-selections > "$lst_after"
   # once read-only already installed mount
   mount -o remount,mod:"$workdir_install"=ro "$tmpmountdir" > /dev/null
