@@ -16,7 +16,7 @@ if [ ! -d "$yasp_dir"/aptcache/host/var/cache/apt ]; then
    mkdir -p "$yasp_dir"/aptcache/host/var/cache/apt
 fi
 
-if [ ! -h "$yasp_dir"/aptcache/host/var/cache/apt/archives ]; then
+if [ ! -L "$yasp_dir"/aptcache/host/var/cache/apt/archives ]; then
     (cd "$yasp_dir"/aptcache/host/var/cache/apt; ln -sf /var/cache/apt/archives archives)
 fi
 
@@ -36,7 +36,7 @@ if [ -d "$basecow" -o "$2" = -C ]; then
       cp -arp "$basecow"/* "$yasp_dir"/base/"$basedistro"
   fi
 elif [ -f "$basetgz" -o "$2" = -P ]; then
-  basedistro=`cat `tar xvf "$basetgz" etc/apt/sources.list` |head -n1 |cut -d' ' -f3`
+  basedistro=`tar xvf "$basetgz" etc/apt/sources.list -O |head -n1 |cut -d' ' -f3`
   if [ ! -d "$yasp_dir"/base/"$basedistro"/etc ]; then
       tar -C "$yasp_dir"/base/"$basedistro" -xf "$basetgz"
   fi
