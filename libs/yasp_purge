@@ -2,11 +2,6 @@
 
 yasp_purge()
 {
-  if [ /usr/lib/yasp/yasp_chroot_throw ]; then
-          . /usr/lib/yasp/yasp_chroot_throw
-  fi
-  yasp_chroot_throw
-
   workdir_purge=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_purge_"$i"_"$exec_date" ${srcpackage}XXXXX`
   mount -o remount,ins:0:"$workdir_purge" "$tmpmountdir" > /dev/null
   echo -e "${start_yellow}PURGE${end_color}: purge package(s)..."
