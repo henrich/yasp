@@ -10,7 +10,6 @@ yasp_remove()
   if [  -s "$lst_diff" ]; then
 	cp "$lst_diff" "$tmpmountdir"/tmp
   	echo -e "${start_yellow}REMOVE${end_color}: remove package(s)..."
-  	#chroot "$tmpmountdir" dpkg --remove `cat $lst_diff` > /dev/null
   	chroot "$tmpmountdir" apt-get -yqq remove `cat $lst_diff` > /dev/null
   	mount -o remount,del:"$workdir_remove" "$tmpmountdir" > /dev/null
 	echo -e "${start_green}Done${end_color}"
