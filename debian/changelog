@@ -1,3 +1,9 @@
+yasp (20130523) experimental; urgency=low
+
+  * remove unnecessary chroot_throw_away hook 
+
+ -- Hideki Yamane <henrich@debian.org>  Thu, 23 May 2013 09:21:19 +0900
+
 yasp (20130509) experimental; urgency=low
 
   * Initial release
