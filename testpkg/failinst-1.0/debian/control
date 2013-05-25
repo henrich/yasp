@@ -1,0 +1,12 @@
+Source: failinst
+Section: admin
+Priority: extra
+Maintainer: Hideki Yamane <henrich@debian.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+
+Package: failinst
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: fake package to check yasp
+ This package is to check yasp, fail to exec maintainer script on purpose.

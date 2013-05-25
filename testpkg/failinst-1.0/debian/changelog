@@ -1,0 +1,5 @@
+failinst (1.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Hideki Yamane <henrich@debian.org>  Sat, 25 May 2013 20:50:52 +0900
