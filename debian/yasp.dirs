@@ -4,5 +4,5 @@ var/cache/yasp/base
 var/cache/yasp/aptcache/host/var/cache/apt/
 var/cache/yasp/working
 var/cache/yasp/mountdir
-var/cache/yasp/failed
+var/cache/yasp/morgue
 usr/lib/yasp

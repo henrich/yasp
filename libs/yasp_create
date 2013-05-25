@@ -20,7 +20,7 @@ if [ ! -L "$yasp_dir"/aptcache/host/var/cache/apt/archives ]; then
     (cd "$yasp_dir"/aptcache/host/var/cache/apt; ln -sf /var/cache/apt/archives archives)
 fi
 
-for dir in working mountdir failed
+for dir in working mountdir morgue
 do
   if [ ! -d "$yasp_dir"/"$dir" ]; then
       mkdir "$yasp_dir"/"$dir"
