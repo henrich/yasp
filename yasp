@@ -108,7 +108,7 @@ case "$1" in
       init        : create COW base environment for each distribution
       base-update : update COW base environment for each distribution
       test        : specify changes file and exec test
-                    (install/uninstall/remove/purge/uninstall)
+                    (install/remove/purge/upgrade)
       help        : show this message
 
 END
