@@ -102,12 +102,12 @@ case "$1" in
 
     help | *)
     cat << END 
-    Usage: yasp (init|base-update|test <changes file> |help)
+    Usage: yasp (init|base-update|test <your .changes file> |help)
 
     Option:
       init        : create COW base environment for each distribution
       base-update : update COW base environment for each distribution
-      test        : specify changes file and exec test
+      test        : specify .changes file and exec test
                     (install/remove/purge/upgrade)
       help        : show this message
 
