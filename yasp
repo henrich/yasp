@@ -94,7 +94,8 @@ case "$1" in
     trap 'yasp_chroot_throw' 1 2 3 5 15
     for i in $distro
     do
-	repo_version=`rmadison ${srcpackage} | grep ${i} | cut -d'|' -f2 |sed -e s/\ //g`
+	# repository sometimes has different versions for one distro... so grep " ${ARCH}"
+	repo_version=`rmadison ${srcpackage} | grep ${i} | grep " ${ARCH}"| cut -d'|' -f2 |sed -e s/\ //g`
 	yasp_install && yasp_remove && yasp_purge && yasp_install_del && yasp_upgrade && yasp_chroot_throw
     done
     echo -e "${start_green}PASS: install/remove/purge/upgrade test${end_color}"
