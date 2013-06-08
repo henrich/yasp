@@ -8,7 +8,12 @@ yasp_chroot_throw()
       done
 
       for directory in "$workdir_install" "$workdir_remove" "$workdir_purge" "$workdir_upgrade";
-      do if [ -d $directory ]; then rm -rf $directory; fi
+      do
+	if [ echo `basename $directory` | grep _"$stage"_ ]; then 
+	    cd "$yasp_dir"/working; mv `basename $directory` "$yasp_dir"/morgue/
+        elif [ -d $directory ]; then 
+	    rm -rf $directory
+	fi
       done
 
       echo -e "${start_red}`mount|grep aufs`${end_color}"
