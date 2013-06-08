@@ -5,6 +5,8 @@ yasp_remove()
   workdir_remove=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_remove_"$i"_"$exec_date" ${srcpackage}XXXXX`
   mount -o remount,ins:0:"$workdir_remove" "$tmpmountdir" > /dev/null
 
+  STAGE="remove"
+
   lst_diff=`mktemp --tmpdir=/tmp ${i}-${srcpackage}XXXXX`
   diff -u "$lst_before" "$lst_after"|grep '^+'|cut -f1|sed -e s/^+// -e s/:"$ARCH"// -e s%^++\ */tmp/.*%% > "$lst_diff"
   if [  -s "$lst_diff" ]; then
@@ -13,6 +15,8 @@ yasp_remove()
   	chroot "$tmpmountdir" apt-get -yqq remove `cat $lst_diff` > /dev/null
   	mount -o remount,del:"$workdir_remove" "$tmpmountdir" > /dev/null
 	echo -e "${start_green}Done${end_color}"
+	# once set STAGE empty
+	STAGE=""
   else
 	echo "cannot generate package list... aborting."
 	# if you would specify exit 1, it returns 0

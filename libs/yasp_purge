@@ -6,7 +6,9 @@ yasp_purge()
   mount -o remount,ins:0:"$workdir_purge" "$tmpmountdir" > /dev/null
   echo -e "${start_yellow}PURGE${end_color}: purge package(s)..."
   # $lst_diff was difined in yasp_remove
+  STAGE="purge"
   chroot "$tmpmountdir" dpkg --purge `cat $lst_diff` > /dev/null
   mount -o remount,del:"$workdir_purge" "$tmpmountdir" > /dev/null
+  STAGE=""
   echo -e "${start_green}Done${end_color}"
 }

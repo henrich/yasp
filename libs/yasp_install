@@ -14,6 +14,7 @@ yasp_install()
   echo -e "${start_yellow}INSTALL${end_color}: install package(s)..."
 
   set +e
+  STAGE="install"
   for install_package in $packagelist
   do
     chroot "$tmpmountdir" dpkg -i /tmp/"$install_package" > /dev/null 2>&1
@@ -29,6 +30,8 @@ yasp_install()
 
   lst_after=`mktemp --tmpdir=/tmp ${i}-${srcpackage}XXXXX`
   chroot "$tmpmountdir" dpkg --get-selections > "$lst_after"
+  # once stage set empty
+  STAGE=""
   # once read-only already installed mount
   mount -o remount,mod:"$workdir_install"=ro "$tmpmountdir" > /dev/null
   echo -e "${start_green}Done${end_color}"

@@ -11,6 +11,8 @@ yasp_upgrade()
 	  exit
   fi
 
+  STAGE="upgrade"
+
   if dpkg --compare-versions ${pkg_version} gt-nl ${repo_version} ; then
       workdir_upgrade=`mktemp -d --tmpdir="$yasp_dir"/working --suffix=_upgrade_"$i"_"$exec_date" ${srcpackage}XXXXX`
       mount -o remount,ins:0:"$workdir_upgrade" "$tmpmountdir" > /dev/null
@@ -24,6 +26,7 @@ yasp_upgrade()
       set -e
       chroot "$tmpmountdir" apt-get -fyqq install > /dev/null
       mount -o remount,del:"$workdir_upgrade" "$tmpmountdir"
+      STAGE=""
       echo -e "${start_green}Done${end_color}"
   else
       echo -e "Package version ${repo_version} (in ${i})"
